@@ -1,0 +1,56 @@
++------------------------------------------------------------------------------+
+|                                SBS Series                                    |
++------------------------------------------------------------------------------+
+
+REQUENCY RANGE:       SBS-2150C: 950MHz – 2150MHz
+                      SBS-2500C: 5MHz – 2,500MHz
+SPAN WIDTH:           Up to 1300 MHz (Dependent on Center Frequency)
+RESOLUTION BANDWIDTH: 10KHz, 100KHz, 300KHz, 1MHz
+RF SENSITIVITY:       Greater than -85 dBm Typical
+REFERENCE LEVELS:     Selectable -10 dBm to -50dBm in 5 dBm increments
+SCALE:                5 dB/Div & 2 dB/Div
+DYNAMIC RANGE:        50dBm GUI window
+AMPLITUDE ACCURACY:   +/- 1 dB typical
+FREQUENCY ACCURACY:   +/- 1KHz typical
+MAX RF INPUT:         25 VDC MAX (DC Blocked), +30dBm (1W)
+INPUT IMPEDANCE:      50 ohm
+AMPLITUDE RANGE:      0 dBm to -85 dBm (standard)
+                      0 dBm to -105 dBm (preamp option)
+                      +10 dBm to -65 dBm (attenuator option)
+INPUT CONNECTOR:      SMA is standard. F and BNC available.
+OPERATING TEMPERATURE RANGE: -10°C to +60°C
+SIZE:                 5” W x 7” L x 1” H
+WEIGHT:               1lb
+POWER REQUIREMENTS:   +15 to 24 VDC/9W
+
+http://www.avcomofva.com/View.aspx?mode=live&page=broadcast&child=broadcast/sbs-2-2150c1s#vertical=broadcast/sbsseries
+
+The SBS single board solution was designed from the ground up with the system integrator in mind. 
+The compact design measures 5”x7” so that it can easily be integrated into another piece of 
+equipment, inside a small satellite terminal, or as an integral part of the satellite antenna 
+itself. With no switches to worry about, the SBS can be mounted on the wall, floor, or top of 
+a rack. The only thing needed is external power to power the SBS in the range of +15V to +24VDC/9W. 
+It can be embedded in to a system design or concealed somewhere for covert signal monitoring 
+purposes. The SBS has been embedded and proven in systems built for teleports, Department of 
+Defense, and government agencies. It is also been used in Special Forces as well as maritime 
+applications. Ethernet/USB/RS-232 connectivity adds flexibility when interfacing into a system.
+
+The SBS is designed for the measurement and analysis of communications and broadcast carriers, 
+making uplink, downlink, L-Band carriers, IF, and 10MHz reference signals easy to measure, 
+monitor, and store. The SBS provides excel- lent frequency and amplitude accuracy along with 
+resolution band-width (RBW) selection from 10kHz to 1Mhz. This is required to allow viewing 
+and monitoring of small Telemetry, Tracking, Command Systems (TT&C), data carriers found in 
+many satellite communications markets, spread spectrum, and Wi-Fi as well. Making the RBW smaller
+is like zoom- ing in on a carrier and magnifying a smaller portion of it to see more detail of 
+the signal.Variable reference levels (RL) from -10dB to -50dB make viewing of smaller to larger
+signals possible. Zoom provides viewing at -2 dB RL for close up inspection when doing signal 
+analysis. This also makes maximizing a satellite dish a snap.
+
+The SBS can provide discrete remote monitoring and control from anywhere in the world. The SBS 
+is monitored and controlled using the Avcom Remote Control Software via serial port, USB, or 
+Ethernet. The Remote Control Software has an intuitive user interface that is easy to use 
+with no special training required. It allows remote monitoring and control from your network 
+or over the internet. Features include screen shot capture recording, SNMP for alarm/monitoring, 
+markers, and Automated Data Acquisition (DAQ) with tolerance comparison, and integrated email 
+alerts to name a few. Up to twelve windows can be displayed at one time. The Remote Control 
+Software is available for Windows, Mac, and Linux.
