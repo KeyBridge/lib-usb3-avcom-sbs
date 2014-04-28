@@ -283,10 +283,8 @@ public class USBSerialPortAdapter implements IDeviceAdapter, SerialPortEventList
     // If the first byte is Start Transmission, create a new byte buffer
     if (bytes[0] == 0x02) {
       // create a new bytebuffer of the appropriate length
-      byteBuffer = new byte[ByteUtil.twoByteIntFromBytes(bytes, 1) + 4]; // 4 =
-      // header[3bytes]
-      // + 1
-      // [terminator]
+      byteBuffer = new byte[ByteUtil.twoByteIntFromBytes(bytes, 1) + 4];
+// 4 = header[3bytes] + 1 [terminator]
       byteBufferIndex = 0; // <-- this is critically important
       d.out(this, "STX: Type: " + bytes[3] + ", length: " + byteBuffer.length);
     }
@@ -300,9 +298,9 @@ public class USBSerialPortAdapter implements IDeviceAdapter, SerialPortEventList
       return;
     }
     byteBufferIndex += bytes.length;
-    // If the byteBuffer is full or
-    // the FLAG_ETX flag is set and
-    // the bytebuffer is above zero (we have some data)
+//     If the byteBuffer is full or
+//     the FLAG_ETX flag is set and
+//     the bytebuffer is above zero (we have some data)
     if (byteBufferIndex + 1 == byteBuffer.length) {
       boolean match = byteBuffer.length == byteBufferIndex + 1;
       d.out(this, "ETX: size matched received: " + match);

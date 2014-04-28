@@ -26,6 +26,9 @@
 package org.caulfield.test;
 
 import com.avcomfova.sbs.AvcomSBS;
+import com.avcomfova.sbs.datagram.IDatagram;
+import com.keybridgeglobal.sensor.interfaces.IDatagramListener;
+import com.keybridgeglobal.sensor.util.ByteUtil;
 import com.keybridgeglobal.sensor.util.ftdi.FTDI;
 import java.util.ArrayList;
 import java.util.List;
@@ -35,7 +38,7 @@ import javax.usb.*;
  *
  * @author Jesse Caulfield <jesse@caulfield.org>
  */
-public class Test_AvcomSBS {
+public class Test_AvcomSBS implements IDatagramListener {
 
   private static final short vendorId = 0x0403;
   private static final short productId = 0x6001;
@@ -44,6 +47,13 @@ public class Test_AvcomSBS {
     System.out.println("DEBUG Test_AvcomSBS");
     Test_AvcomSBS test = new Test_AvcomSBS();
 
+    System.out.println("pid8 " + (0x08 << 4));
+
+    byte pid8 = (byte) (8 << 4);
+    for (int i = 0; i < 8; i++) {
+      System.out.println("pid8[" + i + "] " + ByteUtil.getBit(pid8, i));
+    }
+
 //    AvcomSBS avcom = new AvcomSBS();
 //    UsbDevice usbDevice = test.findAvcomUsbDevice();
     List<UsbDevice> usbDeviceList = FTDI.findFTDIDevices();
@@ -51,16 +61,18 @@ public class Test_AvcomSBS {
     System.out.println("DEBUG Test_AvcomSBS " + usbDeviceList);
 
     AvcomSBS avcom = new AvcomSBS(usbDeviceList.get(0));
+    avcom.addListener(test);
+    System.out.println("RUN");
+    avcom.run();
 
 //    System.out.println("avcom device " + usbDevice);
 //    System.out.println("");
-//    System.out.println("USB direction values");
+    System.out.println("USB direction values");
 //    System.out.println("mask " + new Byte((byte) 0x80));
 //    System.out.println("mask " + ((byte) 0    x80));
 //    System.out.println("host to device " + (0 << 7));
 //    System.out.pri
 //    ntln("device to host " + (1 << 7));
-
   }
 
   /**
@@ -76,6 +88,11 @@ public class Test_AvcomSBS {
     List<UsbDevice> usbDevices = getUSBDeviceList(virtualRootUsbHub, vendorId, productId);
 
     return usbDevices.isEmpty() ? null : usbDevices.get(0);
+  }
+
+  @Override
+  public void onDatagram(IDatagram datagram) {
+    System.out.println("DEBUG Test_Acvom onDatagram " + datagram.getDatagramType());
   }
 
   /**

@@ -27,7 +27,7 @@ package com.avcomofva.sbs.datagram.write;
 
 import com.avcomfova.sbs.datagram.ADatagram;
 import com.avcomfova.sbs.datagram.IDatagram;
-import com.avcomofva.sbs.enumerated.EAvcomDatagramType;
+import com.avcomofva.sbs.enumerated.EAvcomDatagram;
 import com.avcomofva.sbs.enumerated.EAvcomReferenceLevel;
 import com.avcomofva.sbs.enumerated.EAvcomResolutionBandwidth;
 import com.keybridgeglobal.sensor.util.ByteUtil;
@@ -82,7 +82,7 @@ public class SettingsRequest extends ADatagram {
    * reference level and RBW must be configured prior to use.
    */
   public SettingsRequest() {
-    super(EAvcomDatagramType.SETTINGS_REQUEST);
+    super(EAvcomDatagram.SETTINGS_REQUEST);
     this.valid = true;
     this.elapsedTimeMS = 1;
     this.transactionId = System.currentTimeMillis();
@@ -213,7 +213,7 @@ public class SettingsRequest extends ADatagram {
     b[idx++] = IDatagram.FLAG_STX;
     b[idx++] = 0;
     b[idx++] = SETTINGS_REQUEST_LENGTH;
-    b[idx++] = EAvcomDatagramType.SETTINGS_REQUEST.getByteCode();
+    b[idx++] = EAvcomDatagram.SETTINGS_REQUEST.getByteCode();
     b[idx++] = (byte) (centerFrequency >>> 24);
     b[idx++] = (byte) (centerFrequency >>> 16);
     b[idx++] = (byte) (centerFrequency >>> 8);

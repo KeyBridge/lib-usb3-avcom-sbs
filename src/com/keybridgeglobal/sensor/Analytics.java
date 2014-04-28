@@ -1,7 +1,6 @@
 package com.keybridgeglobal.sensor;
 
 import com.avcomfova.sbs.datagram.IDatagram;
-import com.keybridgeglobal.sensor.avcom.datagram.WaveformResponseExtended;
 import com.keybridgeglobal.sensor.util.Debug;
 import java.util.*;
 
@@ -50,9 +49,9 @@ public class Analytics {
    */
   public void update(IDatagram datagram) {
     d.out(this, "update enter");
-    WaveformResponseExtended wre = (WaveformResponseExtended) datagram;
+//    WaveformResponseExtended wre = (WaveformResponseExtended) datagram;
     // This datagrams serialnumber
-    String serialNum = wre.getTransactionId();
+    Long serialNum = datagram.getTransactionId();
     // Calculate the statistic params
     if (this.waveformReceivedCount == Integer.MAX_VALUE - 1) {
       this.waveformReceivedCount = 1;
@@ -73,7 +72,7 @@ public class Analytics {
     }
     // Update the max, min, average waveform data
     if (detailedStatistics) {
-      updateMaxMinAve(wre);
+      updateMaxMinAve(datagram);
     }
     d.out(this, "update exit");
   }
@@ -116,7 +115,7 @@ public class Analytics {
    * <p>
    * @param WaveformResponseExtended_Interface datagram
    */
-  private void updateMaxMinAve(WaveformResponseExtended wre) {
+  private void updateMaxMinAve(IDatagram wre) {
     String serialNum = wre.getTransactionId();
     // If no WRE exists, then create one
     if ((maxWaveformByJob.get(serialNum) == null) || (minWaveformByJob.get(serialNum) == null) || (aveWaveformByJob.get(serialNum) == null)) {

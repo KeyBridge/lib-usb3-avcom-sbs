@@ -26,7 +26,7 @@
 package com.avcomofva.sbs.datagram.read;
 
 import com.avcomfova.sbs.datagram.ADatagram;
-import com.avcomofva.sbs.enumerated.EAvcomDatagramType;
+import com.avcomofva.sbs.enumerated.EAvcomDatagram;
 import com.avcomofva.sbs.enumerated.EAvcomReferenceLevel;
 import com.avcomofva.sbs.enumerated.EAvcomResolutionBandwidth;
 import com.keybridgeglobal.sensor.util.ByteUtil;
@@ -35,7 +35,7 @@ import java.util.TreeMap;
 
 /**
  * Waveform Response Datagram from Avcom devices 12-bit waveform packet
- * (Frimware rev >= v2.10 Table 11
+ * (Firmware rev >= v2.10 Table 11
  * <p>
  * @author Jesse Caulfield <jesse@caulfield.org>
  */
@@ -67,7 +67,7 @@ public class TraceResponse12Bit extends ADatagram {
   private int reserved02;// 502  typically 0xff
 
   public TraceResponse12Bit(byte[] bytes) {
-    super(EAvcomDatagramType.TRACE_RESPONSE_12BIT);
+    super(EAvcomDatagram.TRACE_RESPONSE_12BIT);
     this.valid = this.parse(bytes);
   }
 
@@ -229,7 +229,7 @@ public class TraceResponse12Bit extends ADatagram {
         + "\n --------------------------------"
         + "\n this.datagramType            " + datagramType
         + "\n this.isValid                 " + valid
-        + "\n 4-483   trace length         " + data.length
+        + "\n 4-483   trace length         " + (data != null ? data.length : "null")
         + "\n 484     productId            " + productId
         + "\n 485-488 centerFrequencyMHz:  " + centerFrequencyMHz
         + "\n 489-492 spanMHz              " + spanMHz

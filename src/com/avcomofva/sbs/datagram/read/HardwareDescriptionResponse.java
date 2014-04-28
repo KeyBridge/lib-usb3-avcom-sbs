@@ -136,8 +136,8 @@ public final class HardwareDescriptionResponse extends ADatagram {
    * @param bytes the byte array returned from the sensor
    */
   public HardwareDescriptionResponse(byte[] bytes) {
-    super(EAvcomDatagramType.HARDWARE_DESCRIPTION_RESPONSE);
-    this.parse(bytes);
+    super(EAvcomDatagram.HARDWARE_DESCRIPTION_RESPONSE);
+    this.valid = this.parse(bytes);
   }
 
   //<editor-fold defaultstate="collapsed" desc="Getter Methods">
@@ -456,7 +456,7 @@ public final class HardwareDescriptionResponse extends ADatagram {
         + "\n -----------------------------------------------"
         + "\n this.datagramType             " + datagramType
         + "\n this.isValid                  " + valid
-        + "\n this.datagramData length      " + data.length
+        + "\n this.data length              " + (data != null ? data.length : "null")
         + "\n 4 productId                   " + productId
         + "\n 5 firmwareVersionMajor        " + firmwareVersionMajor
         + "\n 6 firmwareVersionMinor        " + firmwareVersionMinor
@@ -474,7 +474,6 @@ public final class HardwareDescriptionResponse extends ADatagram {
         + "\n 24 availableComPorts        0x" + Integer.toHexString(availableComPorts)
         + "\n 25-26 currentInternalExtFrq:0x" + ByteUtil.toString(currentInternalExtFreq)
         + "\n 27-28 currentInternalExt    0x" + ByteUtil.toString(currentInternalExt)
-        // + "\n serialNumber : " + ByteUtil.toString(serialNumber)
         + "\n 29-44 serialNumber            " + serialNumber
         + "\n 45 pcbRevision                " + pcbRevision
         + "\n 46 calibration Day            " + calibrationDay

@@ -25,12 +25,18 @@
  */
 package com.avcomfova.sbs;
 
+import com.avcomfova.sbs.datagram.Datagrams;
 import com.avcomfova.sbs.datagram.IDatagram;
 import com.avcomofva.sbs.datagram.read.HardwareDescriptionResponse;
 import com.avcomofva.sbs.datagram.write.HardwareDescriptionRequest;
+import com.avcomofva.sbs.datagram.write.TraceRequest;
+import com.avcomofva.sbs.enumerated.EAvcomDatagram;
+import com.keybridgeglobal.sensor.interfaces.IDatagramListener;
 import com.keybridgeglobal.sensor.util.ByteUtil;
 import com.keybridgeglobal.sensor.util.ftdi.FTDI;
 import java.net.InetAddress;
+import java.util.ArrayList;
+import java.util.List;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 import javax.usb.*;
@@ -67,33 +73,10 @@ public class AvcomSBS {
    */
   private static final short USB_PRODUCT_ID = 0x6001;
   /**
-   * FTDI vendor specific USB command to set a modem control parameter.
+   * A set of IDatagramListener instances. These will be notified when a new
+   * Avcom datagram is read from the device represented by this instance.
    */
-//  private static final byte SET_MODEM_CONTROL_REQUEST = 1;
-  /**
-   * FTDI vendor specific USB command to set a modem control parameter.
-   */
-//  private static final byte SET_BAUDRATE_REQUEST = 3;
-  /**
-   * Reset the port
-   */
-//  private static final byte SIO_RESET = 0;
-  /**
-   * Set the modem control register. Definition for flow control.
-   */
-//  private static final byte SIO_MODEM_CTRL = 1;
-  /**
-   * Set flow control register. Definition for flow control.
-   */
-//  private static final byte SIO_SET_FLOW_CTRL = 2;
-  /**
-   * Set baud rate. Definition for flow control.
-   */
-//  private static final byte SIO_SET_BAUD_RATE = 3;
-  /**
-   * Set the data characteristics of the port. Definition for flow control.
-   */
-//  private static final byte SIO_SET_DATA = 4;
+  private final List<IDatagramListener> datagramListeners;
 
   /**
    * The USB Device to which this AvcomSBS device is attached.
@@ -138,7 +121,14 @@ public class AvcomSBS {
    */
   public AvcomSBS(final UsbDevice usbDevice) throws UsbException, Exception {
     System.out.println("Opening AvcomSBS on USB " + usbDevice);
+    /**
+     * Set the USB Device.
+     */
     this.usbDevice = usbDevice;
+    /**
+     * Initialize the Datagram listeners.
+     */
+    this.datagramListeners = new ArrayList<>();
     /**
      * Connect to the USB device.
      */
@@ -147,7 +137,6 @@ public class AvcomSBS {
      * Initialize the device.
      */
     initialize();
-
     // Add a shutdown hook to close the port when we're shutting down
     Runtime.getRuntime().addShutdownHook(new Thread() {
 
@@ -210,7 +199,7 @@ public class AvcomSBS {
         return true;
       }
     });
-    System.out.println("DEBUG AvcomSBS claimed USB interface " + usbInterfaceTemp);
+//    System.out.println("DEBUG AvcomSBS claimed USB interface " + usbInterfaceTemp);
     /**
      * If the interface was successfully claimed then assign it to the class
      * field. This is referenced later for release when the application closes.
@@ -269,10 +258,10 @@ public class AvcomSBS {
        */
       if ((usbEndpoint.getUsbEndpointDescriptor().bEndpointAddress() & ENDPOINT_DIRECTION_IN) == 0) {
         usbPipeWrite = usbEndpoint.getUsbPipe();
-        System.out.println("DEBUG AvcomSBS READ  is " + usbPipeWrite);
+        System.out.println("DEBUG AvcomSBS WRITE  is " + usbPipeWrite);
       } else {
         usbPipeRead = usbEndpoint.getUsbPipe();
-        System.out.println("DEBUG AvcomSBS WRITE is " + usbPipeRead);
+        System.out.println("DEBUG AvcomSBS READ is " + usbPipeRead);
       }
     }
   }
@@ -311,23 +300,48 @@ public class AvcomSBS {
      */
   }
 
-  private void initialize() throws UsbException {
-    System.out.println("DEBUG initialize");
-    for (int i = 0; i < 2; i++) {
-
+  /**
+   * Initialize the Avcom device by sending a few HardwareDescriptionRequest
+   * datagrams down the wire.
+   * <p>
+   * @throws UsbException if the datagrams cannot be written to the device.
+   */
+  @SuppressWarnings("SleepWhileInLoop")
+  private void initialize() throws UsbException, Exception {
+    for (int i = 0; i < 3; i++) {
       write(new HardwareDescriptionRequest());
-      read();
+      IDatagram datagram = read();
+      hardwareDescription = (HardwareDescriptionResponse) (datagram != null ? datagram : hardwareDescription);
+//      System.out.println("DEBUG AvcomSBS initialize " + (hardwareDescription != null ? hardwareDescription.toStringBrief() : " null"));
       try {
         Thread.sleep(1000);
       } catch (InterruptedException ex) {
         Logger.getLogger(AvcomSBS.class.getName()).log(Level.SEVERE, null, ex);
       }
     }
-
+//    System.out.println("DEBUG AvcomSBS initialize " + hardwareDescription);
   }
 
+  public void run() throws UsbException, Exception {
+    System.out.println("RUN");
+    for (int i = 0; i < 100; i++) {
+      write(new TraceRequest());
+      try {
+        read();
+      } catch (Exception exception) {
+        System.err.println("DEBUG RUN ERROR " + exception.getMessage());
+      }
+    }
+  }
+
+  /**
+   * Write a REQUEST datagram to the Avcom device.
+   * <p>
+   * @param datagram the REQUEST-type datagram to write to the Avcom device
+   * @throws UsbException if the USB port cannot be written to
+   */
   private void write(IDatagram datagram) throws UsbException {
-    System.out.println("DEBUG write " + datagram);
+//    System.out.println("DEBUG write " + datagram);
     /**
      * Create a UsbIrp. This creates a UsbIrp that may be optimized for use on
      * this UsbPipe. Using this UsbIrp instead of a DefaultUsbIrp may increase
@@ -338,15 +352,16 @@ public class AvcomSBS {
      */
     if (!usbPipeWrite.isOpen()) {
       usbPipeWrite.open();
-      System.out.println("UsbPipe Write OPEN active [" + usbPipeWrite.isActive() + "] open [" + usbPipeWrite.isOpen() + "]");
+//      System.out.println("UsbPipe Write OPEN active [" + usbPipeWrite.isActive() + "] open [" + usbPipeWrite.isOpen() + "]");
     }
-    /**
-     * syncSubmit returns the number of bytes actually transferred.
-     */
-
-    int transferred = usbPipeWrite.syncSubmit(datagram.serialize());
-    System.out.println("   WRITE " + transferred + " bytes [" + ByteUtil.toString(datagram.serialize()) + "]");
-
+//    int transferred = usbPipeWrite.syncSubmit(datagram.serialize());
+//    UsbIrp usbIrp = usbPipeWrite.asyncSubmit(datagram.serialize());
+    UsbIrp usbIrp = usbPipeWrite.createUsbIrp();
+    usbIrp.setData(datagram.serialize());
+    usbPipeWrite.syncSubmit(usbIrp);
+//    System.out.println("   WRITE isComplete [" + usbIrp.isComplete() + "] isUsbException [" + usbIrp.isUsbException() + "]");
+//    System.out.println("   WRITE " + usbIrp.getActualLength() + " bytes [" + ByteUtil.toString(datagram.serialize()) + "]");
+// DEPRECATED: write bytes directly to the port
 //    UsbIrp usbIrp = usbPipeWrite.createUsbIrp();
 //    usbIrp.setData(datagram.serialize());
 //    System.out.println("   WRITE " + usbIrp.getLength() + " bytes " + ByteUtil.toString(usbIrp.getData()));
@@ -354,28 +369,192 @@ public class AvcomSBS {
 //    usbPipeWrite.close();    System.out.println("UsbPipe Write CLOSE");
   }
 
-  private IDatagram read() throws UsbException {
+  /**
+   * Read data from the USB port.
+   * <p>
+   * @return an Avcom datagram instance.
+   * @throws UsbException if the USB port cannot be accessed
+   * @throws Exception    if the Avcom data cannot be parsed into a valid
+   *                      datagram instance
+   */
+  @SuppressWarnings("NestedAssignment")
+  private IDatagram read() throws Exception {
     if (!usbPipeRead.isOpen()) {
       usbPipeRead.open();
-      System.out.println("UsbPipe Read OPEN active [" + usbPipeRead.isActive() + "] open [" + usbPipeRead.isOpen() + "]");
+//      System.out.println("UsbPipe Read OPEN active [" + usbPipeRead.isActive() + "] open [" + usbPipeRead.isOpen() + "]");
     }
+    /**
+     * The return value will indicate the number of bytes successfully
+     * transferred to or from the target endpoint (depending on direction). The
+     * return value will never exceed the total size of the provided buffer. If
+     * the operation was not sucessful the UsbException will accurately reflect
+     * the cause of the error.
+     */
+    /**
+     * Store the USB device maximum packet size in a local variable for
+     * convenience.
+     */
+    short wMaxPacketSize = usbPipeRead.getUsbEndpoint().getUsbEndpointDescriptor().wMaxPacketSize();
+    /**
+     * Initialize the first USB packet and the bytesRead indicator. These are
+     * used in the first iteration of the while-loop below.
+     * <p>
+     * USB data is sent in packets Least Significant Bit (LSB) first. There are
+     * 4 main USB packet types: Token, Data, Handshake and Start of Frame. Each
+     * packet is constructed from different field types, namely SYNC, PID,
+     * Address, Data, Endpoint, CRC and EOP. The packets are then bundled into
+     * frames to create a USB message.
+     * <p>
+     * Each USB packet starts with a (1 byte) SYNC field. This is basically used
+     * to synchronise the transmitter and the receiver so that the data can be
+     * transferred accurately. In a USB slow / full speed system this SYNC field
+     * consists 3 KJ pairs followed by 2 K’s to make up 8 bits of data. In a USB
+     * Hi-Speed system the synchronisation requires 15 KJ pairs followed by 2
+     * K’s to make up 32 bits of data.
+     * <p>
+     * Following on directly after the SYNC field is a (1 byte) Packet
+     * Identifier Field. The Packet Identifier Field consists of a 4 bit
+     * identifier and a further 4 bits which are the one’s compliment of the
+     * identifier.
+     * <p>
+     * The data field is not a fixed length. It is within the range of 0 - 8192
+     * bits long, and always an integral number of bytes.
+     * <p>
+     * USB DATA Packets: A data packet may be variable length, dependent upon
+     * the data. However, the data field will be an integral number of bytes. A
+     * USB Data packet is constructed thus: [SYNC][PID][DATA][CRC16][EOP].
+     * Depending upon the bus speed the SYNC header is 8 or 31 bits. PID is
+     * always 8 bits. DATA may range between 0 and 8192 bits. CRC16 is 16 bits
+     * and EOP (end of packet) is 3 bits.
+     * <p>
+     * Developer note: CRC and EOP are not included in the returned byte array,
+     * but rather are processed and used to raise an error condition within the
+     * USB Pipe instance. Therefore the usbPacket is actually just
+     * [SYNC][PID][DATA].
+     */
+    byte[] avcomDatagram = null;
+    int avcomDatagramIndex = 0;
+    byte[] usbPacket = new byte[wMaxPacketSize];
+    int bytesRead;
+    while ((bytesRead = usbPipeRead.syncSubmit(usbPacket)) > 2) {
+//      System.out.println("  read " + bytesRead + " bytes " + usbPacket.length + " [" + ByteUtil.toString(usbPacket) + "]");
+//      for (int i = 0; i < 8; i++) {        System.out.println("    usbPacket[0][" + i + "] " + ByteUtil.getBit(usbPacket[0], i));      }
+//      for (int i = 0; i < 8; i++) {        System.out.println("    usbPacket[1][" + i + "] " + ByteUtil.getBit(usbPacket[1], i));      }
+//      byte[] usbPacketData = new byte[bytesRead - 2];
+      /**
+       * Inspect the USB Packet for an Avcom STX flag (0x02). This will be
+       * located at USB packet byte 3 (first data byte after the two-byte USB
+       * Packet header).
+       */
+      if (usbPacket[2] == IDatagram.FLAG_STX && EAvcomDatagram.fromByteCode(usbPacket[5]) != null) {
+        /**
+         * Initialize the Avcom datagram byte buffer to the length indicated in
+         * the datagram packet header (Avcom datagram bytes 1 and 2). The USB
+         * Packet byte index 3 skips the 2-byte header.
+         * <p>
+         * Add four additional bytes the Avcom datagram byte array to include
+         * the Avcom packet header information, which is not included in the
+         * Avcom datagram length number.
+         */
+        avcomDatagram = new byte[ByteUtil.twoByteIntFromBytes(usbPacket, 3) + 4];
+        /**
+         * Important: Initialize the Avcom Datagram byte buffer Index. This is
+         * used to copy fresh data into the buffer from subsequent USB packets.
+         */
+        avcomDatagramIndex = 0;
+      }
+      if (avcomDatagram != null) {
+        /**
+         * If the Avcom datagram has been initialized then copy the USB packet
+         * data into the Avcom datagram byte buffer. Increment the Avcom
+         * Datagram byte buffer Index by the number of bytes copied.
+         * <p>
+         * Developer note: The USB port data does not always align with the read
+         * buffer. If there is more data than the datagram requires then only
+         * copy up to the datagram fill and no more. CopyLength is the number of
+         * array elements to be copied.
+         */
+        int copyLength = (bytesRead - 2 + avcomDatagramIndex > avcomDatagram.length
+          ? avcomDatagram.length - avcomDatagramIndex
+          : bytesRead - 2);
 
-//    UsbIrp usbIrp = usbPipeRead.createUsbIrp();
-//    usbPipeRead.syncSubmit(usbIrp);
-//    System.out.println("   READ UsbIrp " + ByteUtil.toString(usbIrp.getData()));
-    byte[] bytes = new byte[186];
-    int bytesRead = usbPipeRead.syncSubmit(bytes);
-    System.out.println("   READ " + bytesRead + " bytes " + ByteUtil.toString(bytes));
+        System.out.println("  read " + bytesRead + " bytes "
+          + usbPacket.length + " [" + ByteUtil.toString(usbPacket)
+          + "]  avcomDatagram.length [" + avcomDatagram.length
+          + "] avcomDatagramIndex [" + avcomDatagramIndex
+          + "] copylength [" + copyLength + "]");
 
-    HardwareDescriptionResponse hw = null;
-    try {
-      hw = new HardwareDescriptionResponse(bytes);
-    } catch (Exception e) {
-      System.err.println("   READ Failed to parse bytes " + e.getMessage());
+        System.arraycopy(usbPacket,
+                         2,
+                         avcomDatagram,
+                         avcomDatagramIndex,
+                         copyLength);
+//        avcomDatagramIndex += bytesRead - 2;
+        avcomDatagramIndex += copyLength;
+      }
+      /**
+       * Important: Reinitialize the usbPacket byte array.
+       * <p>
+       * Developer note: The syncSubmit (and presumably asyncSubmit) do not
+       * clear the input byte array - they merely write bytes into the provided
+       * array. Reusing a previously populated byte array creates JUNK data as
+       * new bytes are written over the old bytes but if the new packet is
+       * shorter then old bytes will remain.
+       */
+      usbPacket = new byte[wMaxPacketSize];
     }
-    System.out.println(hw);
-//    usbPipeRead.close();    System.out.println("UsbPipe Read CLOSE");
-    return null;
+    /**
+     * At this point the Avcom datagram is either null or has been completely
+     * read. Process and return the Avcom datagram byte buffer as a valid
+     * Datagram instance.
+     */
+//    System.out.println("DEBUG read avcom packet " + ByteUtil.toStringWithIndex(avcomDatagram));
+//    System.out.println("DEBUG read avcom packet " + ByteUtil.toString(avcomDatagram));
+    /**
+     * If the data is null then return null;
+     */
+    if (avcomDatagram == null) {
+      return null;
+    }
+    /**
+     * If the data is not null then parse it into a datagram and notify all
+     * listeners. Return the datagram for internal use.
+     */
+    IDatagram datagram = Datagrams.getInstance(avcomDatagram);
+    notifyListeners(datagram);
+    return datagram;
+    //    return avcomDatagram == null      ? null      : Datagrams.getInstance(avcomDatagram);
+  }
+
+  /**
+   * Internal method called when an Avcom datagram has been read off the device.
+   * A copy of the datagram is forwarded to all listeners when they are
+   * notified.
+   * <p>
+   * @param datagram
+   */
+  private void notifyListeners(IDatagram datagram) {
+    for (IDatagramListener iDatagramListener : datagramListeners) {
+      iDatagramListener.onDatagram(datagram);
+    }
+  }
+
+  /**
+   * Add a Datagram Listener to receive datagrams when ready
+   * <p>
+   * @param listener the listener instance
+   */
+  public synchronized void addListener(IDatagramListener listener) {
+    this.datagramListeners.add(listener);
+  }
+
+  /**
+   * Remove a DatagramListener
+   * <p>
+   * @param listener the listener instance
+   */
+  public synchronized void removeListener(IDatagramListener listener) {
+    this.datagramListeners.remove(listener);
   }
 
 }

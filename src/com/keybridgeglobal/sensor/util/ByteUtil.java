@@ -1,5 +1,6 @@
 package com.keybridgeglobal.sensor.util;
 
+import java.text.DecimalFormat;
 import java.util.Random;
 
 @SuppressWarnings("ValueOfIncrementOrDecrementUsed")
@@ -91,9 +92,9 @@ public class ByteUtil {
    * To set one bit to a bit string at the specified position with the specified
    * bit value:
    * <p>
-   * @param data
-   * @param pos
-   * @param val
+   * @param data the Byte to study
+   * @param pos  the bit position to get
+   * @param val  the value to set (zero or one)
    */
   public static void setBit(byte[] data, int pos, int val) {
     int posByte = pos / 8;
@@ -107,9 +108,9 @@ public class ByteUtil {
   /**
    * Unsigned int from two bytes
    * <p>
-   * @param bytes
-   * @param index
-   * @return
+   * @param bytes a byte array
+   * @param index the index offset into the byte array to sample
+   * @return a two-byte integer
    */
   public static int twoByteIntFromBytes(byte[] bytes, int index) {
     int idx = index;
@@ -121,9 +122,9 @@ public class ByteUtil {
   /**
    * Get an unsigned integer from a 4-byte word
    * <p>
-   * @param bytes
-   * @param index
-   * @return
+   * @param bytes a byte array
+   * @param index the index offset into the byte array to sample
+   * @return a 4-byte long
    */
   public static long intFrom4Bytes(byte[] bytes, int index) {
     return intFrom4Bytes(bytes, index, false);
@@ -132,10 +133,10 @@ public class ByteUtil {
   /**
    * Get a signed or unsigned integer from a 4-byte word.
    * <p>
-   * @param bytes
-   * @param index
-   * @param signed
-   * @return
+   * @param bytes  a byte array
+   * @param index  the index offset into the byte array to sample
+   * @param signed indicator for signed/unsigned integer
+   * @return a signed or unsigned integer from a 4-byte word
    */
   public static long intFrom4Bytes(byte[] bytes, int index, boolean signed) {
     int idx = index;
@@ -320,14 +321,60 @@ public class ByteUtil {
    * @return
    */
   public static String toString(byte[] bytes, boolean spaces) {
-    String str = "";
-    for (byte b : bytes) {
-      str += Integer.toHexString(b & 0x000000FF);
-      if (spaces) {
-        str += " ";
+    StringBuilder sb = new StringBuilder();
+    if (bytes != null) {
+      for (byte b : bytes) {
+        sb.append(Integer.toHexString(b & 0x000000FF)).append(spaces ? " " : "");
       }
     }
-    return str;
+    return sb.toString();
+  }
+
+  /**
+   * Bring a byte array with a numbered header. This produces a multi-line
+   * output useful for identifying each byte hex value and its corresponding
+   * index. Example output:
+   * <pre>
+   * -----------------------------------------------------------------
+   * |00 | 01 | 02 | 03 | 04 | 05 | 06 | 07 | 08 | 09 | 10 | 11 | 12 | - index number
+   * +---+----+----+----+----+----+----+----+----+----+----+----+----+-
+   * | 0 |  1 |  2 | 55 |  3 |  6 | ff |  5 |  4 |  6 |  9 |  8 |  7 | - byte hex value
+   * -----------------------------------------------------------------
+   * </pre>
+   * <p>
+   * @param bytes a byte array
+   * @return a multi-line string showing each byte and its corresponding index
+   *         value
+   */
+  public static String toStringWithIndex(byte[] bytes) {
+    StringBuilder sb = new StringBuilder();
+    DecimalFormat df = new DecimalFormat("00 | ");
+    if (bytes != null) {
+      int len = bytes.length;
+      for (int i = 0; i < bytes.length; i++) {
+        sb.append("-----");
+      }
+      sb.append("\n|");
+      for (int i = 0; i < bytes.length; i++) {
+        sb.append(df.format(i));
+//        sb.append(String.format("[%2d]", i));
+      }
+      sb.append("\n+");
+      for (int i = 0; i < bytes.length; i++) {
+        sb.append("---+-");
+      }
+      sb.append("\n|");
+      for (byte b : bytes) {
+        sb.append(String.format("%2s | ", Integer.toHexString(b & 0x000000FF)));
+//        sb.append(String.format("[%02]", Integer.toHexString(b & 0x000000FF)));
+      }
+      sb.append("\n");
+      for (int i = 0; i < bytes.length; i++) {
+        sb.append("-----");
+      }
+
+    }
+    return sb.toString();
   }
 
   /**

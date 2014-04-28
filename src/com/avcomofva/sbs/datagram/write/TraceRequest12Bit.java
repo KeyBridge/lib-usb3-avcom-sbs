@@ -27,7 +27,7 @@ package com.avcomofva.sbs.datagram.write;
 
 import com.avcomfova.sbs.datagram.ADatagram;
 import com.avcomofva.sbs.datagram.read.TraceResponse12Bit;
-import com.avcomofva.sbs.enumerated.EAvcomDatagramType;
+import com.avcomofva.sbs.enumerated.EAvcomDatagram;
 import com.keybridgeglobal.sensor.util.ByteUtil;
 
 /**
@@ -47,7 +47,7 @@ public class TraceRequest12Bit extends ADatagram {
   private static final byte[] GET_TRACE_REQUEST_MESSAGE = new byte[]{2, 0, 3, 3, 5, 3};
 
   public TraceRequest12Bit() {
-    super(EAvcomDatagramType.TRACE_REQUEST);
+    super(EAvcomDatagram.TRACE_REQUEST);
     this.valid = true;
     this.elapsedTimeMS = 1;
     this.transactionId = System.currentTimeMillis();

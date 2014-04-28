@@ -25,7 +25,7 @@
  */
 package com.avcomfova.sbs.datagram;
 
-import com.avcomofva.sbs.enumerated.EAvcomDatagramType;
+import com.avcomofva.sbs.enumerated.EAvcomDatagram;
 
 /**
  * An abstract Datagram implementation with all basic methods and variables
@@ -37,7 +37,7 @@ import com.avcomofva.sbs.enumerated.EAvcomDatagramType;
 public abstract class ADatagram implements IDatagram {
 
   // Datagram housekeeping -----------------------------------------------------
-  protected final EAvcomDatagramType datagramType;
+  protected final EAvcomDatagram datagramType;
   /**
    * The trace data read by the device (dB)
    */
@@ -62,7 +62,7 @@ public abstract class ADatagram implements IDatagram {
    * <p>
    * @param datagramType the datagram type
    */
-  public ADatagram(EAvcomDatagramType datagramType) {
+  public ADatagram(EAvcomDatagram datagramType) {
     this.datagramType = datagramType;
   }
 
@@ -83,7 +83,7 @@ public abstract class ADatagram implements IDatagram {
    * @return the datagram type identifier
    */
   @Override
-  public EAvcomDatagramType getDatagramType() {
+  public EAvcomDatagram getDatagramType() {
     return datagramType;
   }
 
