@@ -91,10 +91,9 @@ public class DeviceConnector_Avcom implements IDeviceConnector, IDatagramListene
    * <p>
    * <
    * pre>
-   *  | <------ w -----> | <------ w -----> | <------ w -----> | <---- w * i ---> |
-   *  | <-------------------------------  span  --------------------------------> |
-   *  | ^       ^                  ^        ^
-   *    start   cf0                |cf1     centerFrequency
+   * | <------ w -----> | <------ w -----> | <------ w -----> | <---- w * i --->
+   * | | <------------------------------- span -------------------------------->
+   * | | ^ ^ ^ ^ start cf0 |cf1 centerFrequency
    * <p>
    * Where: w = Span of each individual sample = TRACE_DATA_LENGTH
    * (bytes/sample) * ResolutionBandwidth (MHz/byte) = 320 * RBW (MHz) i =
@@ -232,8 +231,9 @@ public class DeviceConnector_Avcom implements IDeviceConnector, IDatagramListene
    * to.
    * <p>
    * DEPRECATED: 0310 - hardware is initialized at the DeviceAdapter level, not
-   * DeviceConnector_Avcom Initialize the hardware by sending a HW description
-   * request
+   * DeviceConnector_Avcom
+   * <p>
+   * Initialize the hardware by sending a HW description request
    */
   public void initializeAdapter() {
     d.out(this, "initialize");

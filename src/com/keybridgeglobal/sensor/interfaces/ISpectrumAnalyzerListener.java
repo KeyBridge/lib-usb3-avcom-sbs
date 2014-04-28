@@ -1,7 +1,5 @@
 package com.keybridgeglobal.sensor.interfaces;
 
-import com.avcomfova.sbs.datagram.IWaveformResponseExtended;
-
 /**
  * Interface describing the variables and methods that this instance must
  * support
@@ -15,7 +13,7 @@ public interface ISpectrumAnalyzerListener {
    * <p>
    * @param datagram
    */
-  public void onSADatagram(IWaveformResponseExtended datagram);
+  public void onSADatagram(Object datagram);
 
   /**
    * Light weight change notification that some parameter has changed.

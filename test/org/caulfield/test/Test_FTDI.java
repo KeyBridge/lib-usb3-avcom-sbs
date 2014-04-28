@@ -25,7 +25,6 @@
  */
 package org.caulfield.test;
 
-import com.avcomfova.sbs.AvcomSBS;
 import com.keybridgeglobal.sensor.util.ftdi.FTDI;
 import java.util.ArrayList;
 import java.util.List;
@@ -35,31 +34,18 @@ import javax.usb.*;
  *
  * @author Jesse Caulfield <jesse@caulfield.org>
  */
-public class Test_AvcomSBS {
+public class Test_FTDI {
 
   private static final short vendorId = 0x0403;
   private static final short productId = 0x6001;
 
-  public static void main(String[] args) throws UsbException, Exception {
-    System.out.println("DEBUG Test_AvcomSBS");
-    Test_AvcomSBS test = new Test_AvcomSBS();
+  public static void main(String[] args) throws Exception {
+//    Test_FTDI test = new Test_FTDI();
+//    UsbDevice device = test.findAvcomUsbDevice();
 
-//    AvcomSBS avcom = new AvcomSBS();
-//    UsbDevice usbDevice = test.findAvcomUsbDevice();
-    List<UsbDevice> usbDeviceList = FTDI.findFTDIDevices();
-
-    System.out.println("DEBUG Test_AvcomSBS " + usbDeviceList);
-
-    AvcomSBS avcom = new AvcomSBS(usbDeviceList.get(0));
-
-//    System.out.println("avcom device " + usbDevice);
-//    System.out.println("");
-//    System.out.println("USB direction values");
-//    System.out.println("mask " + new Byte((byte) 0x80));
-//    System.out.println("mask " + ((byte) 0    x80));
-//    System.out.println("host to device " + (0 << 7));
-//    System.out.pri
-//    ntln("device to host " + (1 << 7));
+    FTDI ftdi = new FTDI();
+    ftdi.setBaudRate(115200);
+    ftdi.setDtr(false);
 
   }
 
@@ -123,24 +109,4 @@ public class Test_AvcomSBS {
     return usbDeviceList;
   }
 
-  /**
-   * This forms an inclusive list of all UsbDevices connected to this UsbDevice.
-   * <p>
-   * The list includes the provided device. If the device is also a hub, the
-   * list will include all devices connected to it, recursively.
-   * <p>
-   * @param usbDevice The UsbDevice to use.
-   * @return An inclusive List of all connected UsbDevices.
-   */
-  private List<UsbDevice> getUSBDeviceList(UsbDevice usbDevice) {
-    List<UsbDevice> usbDeviceList = new ArrayList<>();
-    usbDeviceList.add(usbDevice);
-    if (usbDevice.isUsbHub()) {
-//      List<UsbDevice> attachedDevices = ((UsbHub) usbDevice).getAttachedUsbDevices();
-      for (Object attachedDevice : ((UsbHub) usbDevice).getAttachedUsbDevices()) {
-        usbDeviceList.addAll(getUSBDeviceList((UsbDevice) attachedDevice));
-      }
-    }
-    return usbDeviceList;
-  }
 }
