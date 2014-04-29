@@ -27,6 +27,7 @@ package com.avcomofva.sbs.datagram.read;
 
 import com.avcomfova.sbs.datagram.ADatagram;
 import com.avcomofva.sbs.enumerated.EAvcomDatagram;
+import com.avcomofva.sbs.enumerated.EAvcomProductID;
 import com.avcomofva.sbs.enumerated.EAvcomReferenceLevel;
 import com.avcomofva.sbs.enumerated.EAvcomResolutionBandwidth;
 import com.keybridgeglobal.sensor.util.ByteUtil;
@@ -46,14 +47,15 @@ public class TraceResponse extends ADatagram {
    */
   private static final int TRACE_RESPONSE_LENGTH = 0x0155; // table 9Firmware >= v1.9
   /**
-   * The length of the data portion of a TRACE_RESPONSE message.
+   * The length of the data portion of a TRACE_RESPONSE message. This is used
+   * internally and by the AvcomSBS to create a piecewise SettingsRequest set.
    */
-  private static final int TRACE_DATA_LENGTH = 320;// first 320 bytes are 8-bit unsigned int data
+  public static final int TRACE_DATA_LENGTH = 320;// first 320 bytes are 8-bit unsigned int data
 
   private boolean saturated = false; // did the sensor detect saturation?
   //----------------------------------------------------------------------------
   // Setting valuesByte Location in Data
-  private int productId; // 324
+  private EAvcomProductID productId; // 324
   private double centerFrequencyMHz; // 325-328
   private double spanMHz;// 329-332
   private EAvcomReferenceLevel referenceLevel;  // 333
@@ -65,9 +67,23 @@ public class TraceResponse extends ADatagram {
   private int reserved01;// 341  typically 0xff
   private int reserved02;// 342  typically 0xff
 
-  public TraceResponse(byte[] bytes) {
+  /**
+   * Empty constructor. The data must be parsed separately.
+   */
+  public TraceResponse() {
     super(EAvcomDatagram.TRACE_RESPONSE);
-    this.valid = this.parse(bytes);
+  }
+
+  /**
+   * Construct a new TraceResponse instance, automatically parsing the data byte
+   * array.
+   * <p>
+   * @param bytes the data byte array provided by an Avcom sensor
+   * @throws java.lang.Exception if the bytes fail to parse correctly.
+   */
+  public TraceResponse(byte[] bytes) throws Exception {
+    super(EAvcomDatagram.TRACE_RESPONSE);
+    this.parse(bytes);
   }
 
   //<editor-fold defaultstate="collapsed" desc="Getter Methods">
@@ -91,7 +107,7 @@ public class TraceResponse extends ADatagram {
     return lnbPower;
   }
 
-  public int getProductId() {
+  public EAvcomProductID getProductId() {
     return productId;
   }
 
@@ -116,11 +132,12 @@ public class TraceResponse extends ADatagram {
    * fields.
    * <p>
    * @param bytes the byte array returned from the sensor
-   * @return TRUE if parse is successful
+   * @throws java.lang.Exception if the parse operation fails or encounters an
+   *                             error
    */
   @Override
-  public boolean parse(byte[] bytes) {
-    this.productId = bytes[324];
+  public void parse(byte[] bytes) throws Exception {
+    this.productId = EAvcomProductID.fromByteCode(bytes[324]);
     this.centerFrequencyMHz = ByteUtil.intFrom4Bytes(bytes, 325) / 10000;
     this.spanMHz = ByteUtil.intFrom4Bytes(bytes, 329) / 10000;
     this.referenceLevel = EAvcomReferenceLevel.fromByteCode(bytes[333]);
@@ -151,6 +168,12 @@ public class TraceResponse extends ADatagram {
      * flag. This indicates that the reference level should be reduced.
      */
     this.data = new double[TRACE_DATA_LENGTH];
+    /**
+     * Error condition - if the ReferenceLevel was not read then FAIL parsing.
+     */
+    if (this.referenceLevel == null) {
+      throw new Exception("ReferenceLevel byte is null : " + bytes[333]);
+    }
     for (int i = 0; i < TRACE_DATA_LENGTH; i++) {
       /**
        * Upshift negative byte values to accommodate an unsigned int.
@@ -165,8 +188,8 @@ public class TraceResponse extends ADatagram {
       }
       this.data[i] = bytes[i + 4];
     }
-
-    return ByteUtil.twoByteIntFromBytes(bytes, 1) == TRACE_RESPONSE_LENGTH;
+    this.valid = true;
+//    ByteUtil.twoByteIntFromBytes(bytes, 1) == TRACE_RESPONSE_LENGTH;
   }
 
   /**
@@ -180,20 +203,19 @@ public class TraceResponse extends ADatagram {
   }
 
   /**
-   * Assemble a Map object from the waveform data.<br>
-   * In a waveform, each sample byte can be described by it's own center
-   * frequency and span.<br>
-   * Aggregated waveform data is stored at dBm values with centerFrequency
-   * indices.<br>
+   * Assemble a Map object from the waveform data. In a waveform, each sample
+   * byte can be described by it's own center frequency and span. Aggregated
+   * waveform data is stored at dBm values with centerFrequency indices.
+   * <pre>
+   * | <----------------------- span s --------------------> |
+   * | ^ startFrequency           ^ centerFrequency          |
+   * |[   ][   ][   ][   ][   ][   ][   ][   ][   ][   ][   ]|
+   * |  ^cf_i
    * <p>
-   * <
-   * pre>
-   * | <----------------------- span s --------------------> | | ^
-   * startFrequency ^ centerFrequency | |[ ][ ][ ][ ][ ][ ][ ][ ][ ][ ][ ]| |
-   * ^cfi
-   * <p>
-   * Where: startFrequency = centerFrequency - span / 2 i = byte count (from 0
-   * to length of sample cfi = resolutionBandwidth * i + startFrequency
+   * Where:
+   *   startFrequency = centerFrequency - span / 2
+   *   i              = byte count (from 0 to length of sample
+   *   cf_i           = resolutionBandwidth * i + startFrequency
    * </pre>
    * <p>
    * @return
@@ -212,8 +234,7 @@ public class TraceResponse extends ADatagram {
     return traceMap;
   }
 
-  @Override
-  public String toString() {
+  public String toStringFull() {
     //    return ByteUtil.toString(datagramData, true);
     if (valid) {
       //      double[] wave = this.getWaveformDBm();
@@ -244,9 +265,10 @@ public class TraceResponse extends ADatagram {
     }
   }
 
-  public String toStringBrief() {
+  @Override
+  public String toString() {
     if (valid) {
-      return "TRACE: CF [" + centerFrequencyMHz
+      return "TR8: CF [" + centerFrequencyMHz
         + "] Span [" + spanMHz
         + "] RL [" + referenceLevel
         + "] RBW [" + resolutionBandwidth + "]";

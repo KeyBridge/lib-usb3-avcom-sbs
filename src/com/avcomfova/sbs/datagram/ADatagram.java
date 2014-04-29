@@ -26,6 +26,7 @@
 package com.avcomfova.sbs.datagram;
 
 import com.avcomofva.sbs.enumerated.EAvcomDatagram;
+import com.keybridgeglobal.sensor.util.SerialNumber;
 
 /**
  * An abstract Datagram implementation with all basic methods and variables
@@ -50,7 +51,7 @@ public abstract class ADatagram implements IDatagram {
   /**
    * how long it took for the hardware to create this Datagram in milliseconds
    */
-  protected int elapsedTimeMS;
+  protected long elapsedTimeMillis;
   /**
    * A (optional) transaction identifier. This is used by a device controller to
    * correlate TRACE_REQUESTS with TRACE_RESPONSES.
@@ -64,6 +65,7 @@ public abstract class ADatagram implements IDatagram {
    */
   public ADatagram(EAvcomDatagram datagramType) {
     this.datagramType = datagramType;
+    this.transactionId = SerialNumber.get();
   }
 
   /**
@@ -93,8 +95,8 @@ public abstract class ADatagram implements IDatagram {
    * @return Elapsed time in milliseconds
    */
   @Override
-  public int getElapsedTimeMS() {
-    return elapsedTimeMS;
+  public long getElapsedTimeMillis() {
+    return elapsedTimeMillis;
   }
 
   /**
@@ -103,8 +105,8 @@ public abstract class ADatagram implements IDatagram {
    * @param elapsedTimeMS Elapsed time in milliseconds
    */
   @Override
-  public void setElapsedTimeMS(int elapsedTimeMS) {
-    this.elapsedTimeMS = elapsedTimeMS;
+  public void setElapsedTimeMillis(long elapsedTimeMS) {
+    this.elapsedTimeMillis = elapsedTimeMS;
   }
 
   /**

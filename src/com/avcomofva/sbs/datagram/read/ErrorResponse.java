@@ -23,42 +23,47 @@
  * ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
  * POSSIBILITY OF SUCH DAMAGE.
  */
-package com.avcomofva.sbs.datagram.write;
+package com.avcomofva.sbs.datagram.read;
 
 import com.avcomfova.sbs.datagram.ADatagram;
 import com.avcomofva.sbs.enumerated.EAvcomDatagram;
+import com.keybridgeglobal.sensor.util.ByteUtil;
 
 /**
- * Avcom Hardware Description Request Datagram. From Table 4: Get HW
- * Description.
- * <p>
- * Get HW Description is recommended to be performed first to determine
- * available control options and operating parameters.
+ * Avcom Error Response message. From Table 16: Error Message.
  * <p>
  * @author Jesse Caulfield <jesse@caulfield.org>
  */
-public class HardwareDescriptionRequest extends ADatagram {
+public class ErrorResponse extends ADatagram {
 
   /**
-   * A pre-configured message to get the HW description.
+   * The error message returned from the Avcom device.
+   */
+  private String errorMessage;
+
+  /**
+   * Construct a new ErrorResponse message from a byte array provided by an
+   * Avcom device.
    * <p>
-   * Developer note: Avcom documentation says the type bytecode for
-   * HARDWARE_DESCRIPTION_REQUEST is 0x07, which is the same as the
-   * HARDWARE_DESCRIPTION_RESPONSE. This breaks bytecode matching. Since the
-   * hardware never produces a HARDWARE_DESCRIPTION_REQUEST we hard-code it in
-   * the EAvcomDatagram as 0x01 and hard-code it in this
-   * HARDWARE_DESCRIPTION_REQUEST instance as 0x07 to avoid the conflict.
+   * @param bytes a device message
+   * @throws java.lang.Exception if the parse operation fails or encounters an
+   *                             error
    */
-  private static final byte[] GET_HARDWARE_DESCRIPTION_REQUEST_MESSAGE = new byte[]{2, 0, 3, 7, 0, 3};
-
-  /**
-   * Construct a new HardwareDescriptionRequest datagram.
-   */
-  public HardwareDescriptionRequest() {
-    super(EAvcomDatagram.HARDWARE_DESCRIPTION_REQUEST);
+  public ErrorResponse(byte[] bytes) throws Exception {
+    super(EAvcomDatagram.ERROR_RESPONSE);
     this.valid = true;
     this.elapsedTimeMillis = 1;
     this.transactionId = System.currentTimeMillis();
+    parse(bytes);
+  }
+
+  /**
+   * Get the error message returned from the Avcom device.
+   * <p>
+   * @return the error message
+   */
+  public String getErrorMessage() {
+    return errorMessage;
   }
 
   /**
@@ -71,18 +76,25 @@ public class HardwareDescriptionRequest extends ADatagram {
    */
   @Override
   public void parse(byte[] bytes) throws Exception {
-    /**
-     * NO OP.
-     */
+    int length = ByteUtil.twoByteIntFromBytes(bytes, 1);
+    char[] chars = new char[length];
+    System.arraycopy(bytes, 4, chars, 0, length);
+    errorMessage = String.copyValueOf(chars);
+    this.valid = true;
   }
 
   /**
-   * Convert this datagram into a byte array so it may be sent to the detector
-   * <p>
-   * @return a byte array
+   * @return always returns null
    */
   @Override
   public byte[] serialize() {
-    return GET_HARDWARE_DESCRIPTION_REQUEST_MESSAGE;
+    return null;
+  }
+
+  @Override
+  public String toString() {
+    return "ERR: [" + datagramType
+      + "] MSG: [" + errorMessage
+      + "]";
   }
 }

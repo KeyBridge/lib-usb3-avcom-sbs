@@ -26,7 +26,6 @@
 package com.avcomofva.sbs.datagram.write;
 
 import com.avcomfova.sbs.datagram.ADatagram;
-import com.avcomofva.sbs.datagram.read.TraceResponse12Bit;
 import com.avcomofva.sbs.enumerated.EAvcomDatagram;
 import com.keybridgeglobal.sensor.util.ByteUtil;
 
@@ -34,9 +33,10 @@ import com.keybridgeglobal.sensor.util.ByteUtil;
  * Avcom 12-bit Waveform Datagram (Firmware >= v2.10). From Table 6: Waveform
  * Transmission Settings.
  * <p>
- * The device responds with a {@linkplain TraceResponse12Bit}
- * <p>
  * @author Jesse Caulfield <jesse@caulfield.org>
+ * @deprecated 04/29/14 - 8 bits provides sufficient resolution for our needs.
+ * The 12-bit trace response datagram is not supported in the AvcomSBS extended
+ * data handling implementation.
  */
 public class TraceRequest12Bit extends ADatagram {
 
@@ -49,7 +49,7 @@ public class TraceRequest12Bit extends ADatagram {
   public TraceRequest12Bit() {
     super(EAvcomDatagram.TRACE_REQUEST);
     this.valid = true;
-    this.elapsedTimeMS = 1;
+    this.elapsedTimeMillis = 1;
     this.transactionId = System.currentTimeMillis();
   }
 
@@ -58,11 +58,14 @@ public class TraceRequest12Bit extends ADatagram {
    * fields.
    * <p>
    * @param bytes the byte array returned from the sensor
-   * @return TRUE if parse is successful
+   * @throws java.lang.Exception if the parse operation fails or encounters an
+   *                             error
    */
   @Override
-  public boolean parse(byte[] bytes) {
-    return false;
+  public void parse(byte[] bytes) throws Exception {
+    /**
+     * no op.
+     */
   }
 
   @Override

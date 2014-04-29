@@ -74,7 +74,7 @@ public class Datagrams {
         case ERROR_RESPONSE:
         case LNB_DESCRIPTION_RESPONSE:
         case RESERVED_RESPONSE:
-        case TRACE_RESPONSE_EXTENDED:
+        case TRACE_DATAGRAM:
           throw new UnsupportedOperationException(avcomDatagram + " not supported yet.");
 
         case HARDWARE_DESCRIPTION_RESPONSE:
@@ -90,5 +90,4 @@ public class Datagrams {
     }
     throw new Exception("Unrecognized Avcom datagram type : [" + data[3] + "]");
   }
-
 }

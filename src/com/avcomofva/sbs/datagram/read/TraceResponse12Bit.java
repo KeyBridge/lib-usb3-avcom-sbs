@@ -27,6 +27,7 @@ package com.avcomofva.sbs.datagram.read;
 
 import com.avcomfova.sbs.datagram.ADatagram;
 import com.avcomofva.sbs.enumerated.EAvcomDatagram;
+import com.avcomofva.sbs.enumerated.EAvcomProductID;
 import com.avcomofva.sbs.enumerated.EAvcomReferenceLevel;
 import com.avcomofva.sbs.enumerated.EAvcomResolutionBandwidth;
 import com.keybridgeglobal.sensor.util.ByteUtil;
@@ -37,7 +38,12 @@ import java.util.TreeMap;
  * Waveform Response Datagram from Avcom devices 12-bit waveform packet
  * (Firmware rev >= v2.10 Table 11
  * <p>
+ * The device responds with a {@linkplain TraceResponse12Bit}
+ * <p>
  * @author Jesse Caulfield <jesse@caulfield.org>
+ * @deprecated 04/29/14 - 8 bits provides sufficient resolution for our needs.
+ * This response datagram is not supported in the AvcomSBS extended data
+ * handling implementation.
  */
 public class TraceResponse12Bit extends ADatagram {
 
@@ -54,7 +60,7 @@ public class TraceResponse12Bit extends ADatagram {
   //----------------------------------------------------------------------------
   // Setting values  Byte Location in Data
 //  private final byte[] waveform = new byte[TRACE_DATA_12BIT_LENGTH]; // 4-483: 479 12-bit points scaled per description in constructor
-  private int productId; // 484
+  private EAvcomProductID productId; // 484
   private double centerFrequencyMHz; // 485-488
   private double spanMHz;  // 489-492
   private EAvcomReferenceLevel referenceLevel; // 493
@@ -66,9 +72,9 @@ public class TraceResponse12Bit extends ADatagram {
   private int reserved01;// 501  typically 0xff
   private int reserved02;// 502  typically 0xff
 
-  public TraceResponse12Bit(byte[] bytes) {
+  public TraceResponse12Bit(byte[] bytes) throws Exception {
     super(EAvcomDatagram.TRACE_RESPONSE_12BIT);
-    this.valid = this.parse(bytes);
+    this.parse(bytes);
   }
 
   //<editor-fold defaultstate="collapsed" desc="Getter Methods">
@@ -92,7 +98,7 @@ public class TraceResponse12Bit extends ADatagram {
     return lnbPower;
   }
 
-  public int getProductId() {
+  public EAvcomProductID getProductId() {
     return productId;
   }
 
@@ -117,12 +123,12 @@ public class TraceResponse12Bit extends ADatagram {
    * fields.
    * <p>
    * @param bytes the byte array returned from the sensor
-   * @return TRUE if parse is successful
+   * @throws java.lang.Exception if the parse operation fails or encounters an
+   *                             error
    */
   @Override
-  public boolean parse(byte[] bytes) {
-// populate local values
-    this.productId = bytes[484];
+  public void parse(byte[] bytes) throws Exception {
+    this.productId = EAvcomProductID.fromByteCode(bytes[484]);
     this.centerFrequencyMHz = ByteUtil.intFrom4Bytes(bytes, 485) / 10000;
     this.spanMHz = ByteUtil.intFrom4Bytes(bytes, 489) / 10000;
     this.referenceLevel = EAvcomReferenceLevel.fromByteCode(bytes[493]);
@@ -167,7 +173,8 @@ public class TraceResponse12Bit extends ADatagram {
       }
       this.data[i] = bytes[i + 4];
     }
-    return ByteUtil.twoByteIntFromBytes(bytes, 1) == TRACE_RESPONSE_LENGTH_12BIT;
+    this.valid = true;
+//    ByteUtil.twoByteIntFromBytes(bytes, 1) == TRACE_RESPONSE_LENGTH_12BIT;
   }
 
   /**
@@ -249,7 +256,7 @@ public class TraceResponse12Bit extends ADatagram {
 
   public String toStringBrief() {
     if (valid) {
-      return "TRACE12: CF [" + centerFrequencyMHz
+      return "TR12: CF [" + centerFrequencyMHz
         + "] Span [" + spanMHz
         + "] RL [" + referenceLevel
         + "] RBW [" + resolutionBandwidth + "]";

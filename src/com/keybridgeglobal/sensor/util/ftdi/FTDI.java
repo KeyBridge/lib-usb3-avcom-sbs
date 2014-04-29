@@ -31,13 +31,13 @@ import javax.usb.*;
 import static javax.usb.UsbConst.*;
 
 /**
- * Library to talk to FTDI chips via the USB bus.
+ * Library to talk to FTDI UART chips via the USB bus.
  * <p>
  * This library is tuned to communicate with FT232R, FT2232 and FT232B chips
  * from Future Technology Devices International Ltd.
  * <p>
  * Routines in this class are rewritten in Java from the native "libftdi"
- * library written in C.
+ * library originally written in C.
  * <p>
  * @see <a
  * href="https://github.com/legege/libftdi/blob/master/src/ftdi.c">ftdi.c</a>

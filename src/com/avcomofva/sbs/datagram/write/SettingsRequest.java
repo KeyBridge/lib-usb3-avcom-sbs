@@ -84,7 +84,7 @@ public class SettingsRequest extends ADatagram {
   public SettingsRequest() {
     super(EAvcomDatagram.SETTINGS_REQUEST);
     this.valid = true;
-    this.elapsedTimeMS = 1;
+    this.elapsedTimeMillis = 1;
     this.transactionId = System.currentTimeMillis();
   }
 
@@ -185,15 +185,27 @@ public class SettingsRequest extends ADatagram {
   }//</editor-fold>
 
   /**
+   * Get an exact copy of this SettingsRequest instance.
+   * <p>
+   * @return a copy of the selected SettingsRequest instance.
+   */
+  public SettingsRequest copy() {
+    return new SettingsRequest(centerFrequencyMHz, spanMHz, referenceLevel, resolutionBandwidth);
+  }
+
+  /**
    * Parse the byte array returned from the sensor and use it populate internal
    * fields.
    * <p>
    * @param bytes the byte array returned from the sensor
-   * @return TRUE if parse is successful
+   * @throws java.lang.Exception if the parse operation fails or encounters an
+   *                             error
    */
   @Override
-  public boolean parse(byte[] bytes) {
-    return false;
+  public void parse(byte[] bytes) throws Exception {
+    /**
+     * NO OP.
+     */
   }
 
   /**
@@ -230,8 +242,12 @@ public class SettingsRequest extends ADatagram {
     return b;
   }
 
-  @Override
-  public String toString() {
+  /**
+   * Return a complete output of this Setting configuration.
+   * <p>
+   * @return a multi-line string.
+   */
+  public String toStringFull() {
     if (this.isValid()) {
       return "Settings Request Datagram"
         + "\n name                 value"
@@ -248,10 +264,10 @@ public class SettingsRequest extends ADatagram {
     }
   }
 
-  public String toStringBrief() {
+  @Override
+  public String toString() {
     if (this.isValid()) {
-      return "SET: [" + transactionId
-        + "] CF [" + centerFrequencyMHz
+      return "SET CF [" + centerFrequencyMHz
         + "] span [" + spanMHz
         + "] RL [" + referenceLevel
         + "] RBW [" + resolutionBandwidth + "]";

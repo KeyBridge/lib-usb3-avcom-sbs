@@ -18,35 +18,32 @@ public class SoftwareDescription {
 
   private final HashMap<String, String> settings = new HashMap<>();
   // ----------------------------------------------------------------------------
-  private final String softwareVersion = ProjectBuildInfo.VERSION;
   // ----------------------------------------------------------------------------
-  Calendar cal = Calendar.getInstance();
-  private final String softwareCopyright = ProjectBuildInfo.COPYRIGHT;
-  private final String softwareTerms = ProjectBuildInfo.TERMS;
+  private Calendar cal = Calendar.getInstance();
+
+  public static final String COPYRIGHT = "(C) Key Bridge Global LLC";
+  public static final String TERMS = "Unauthorized use, disassembly or disclosure prohibited.";
+  public static final String VERSION = "4.2.1 (OSGI)";
+
   private final String softwareBuildDate = cal.get(Calendar.MONTH) + "/" + cal.get(Calendar.DAY_OF_MONTH) + "/" + cal.get(Calendar.YEAR) + " at " + cal.get(Calendar.HOUR_OF_DAY) + ":" + cal.get(Calendar.MINUTE);
 
   /**
    * Returns software settings
    * <p>
-   * <pre>
-   * Key                     Meaning
-   * -------------------     ------------------------------
-   * "file.separator"        File separator (e.g., "/")
-   * "java.class.path"       Java classpath
-   * "java.class.version"    Java class version number
-   * "java.home"             Java installation directory
-   * "java.vendor"           Java vendor-specific string
+   * <
+   * pre>
+   * Key Meaning ------------------- ------------------------------
+   * "file.separator" File separator (e.g., "/") "java.class.path" Java
+   * classpath "java.class.version" Java class version number "java.home" Java
+   * installation directory "java.vendor" Java vendor-specific string
    * <p>
-   * "java.vendor.url"       Java vendor URL
-   * "java.version"          Java version number
-   * "line.separator"        Line separator
-   * "os.arch"               Operating system architecture
-   * "os.name"               Operating system name
+   * "java.vendor.url" Java vendor URL "java.version" Java version number
+   * "line.separator" Line separator "os.arch" Operating system architecture
+   * "os.name" Operating system name
    * <p>
-   * "path.separator"        Path separator (e.g., ":")
-   * "user.dir"              User's current working directory
-   * "user.home"             User home directory
-   * "user.name"             User account name
+   * "path.separator" Path separator (e.g., ":") "user.dir" User's current
+   * working directory "user.home" User home directory "user.name" User account
+   * name
    * </pre>
    * <p>
    * @return
@@ -68,9 +65,9 @@ public class SoftwareDescription {
     settings.put("software.user.dir", System.getProperty("user.dir"));
     settings.put("software.user.home", System.getProperty("user.home"));
     settings.put("software.user.name", System.getProperty("user.name"));
-    settings.put("software.copyright", softwareCopyright);
-    settings.put("software.use.terms", softwareTerms);
-    settings.put("software.build.version", softwareVersion);
+    settings.put("software.copyright", COPYRIGHT);
+    settings.put("software.use.terms", TERMS);
+    settings.put("software.build.version", VERSION);
     settings.put("software.build.date", softwareBuildDate);
     try {
       settings.put("system.hostname", InetAddress.getLocalHost().getHostName());
@@ -85,12 +82,12 @@ public class SoftwareDescription {
     Map<?, ?> foo = sd.getStatus();
     // Set set = foo.keySet();
     Iterator<?> i = foo.keySet().iterator();
-    System.out.println(String.format("%25s : %s", "Key", "Value"));
-    System.out.println(String.format("%25s : %s", "--------------", "--------------"));
+    System.out.println(String.format("%-25s : %s", "Key", "Value"));
+    System.out.println(String.format("%-25s : %s", "--------------", "--------------"));
     while (i.hasNext()) {
       String key = (String) i.next();
       // System.out.println("" + key + "\t : " + foo.getStatus(key));
-      System.out.println(String.format("%25s : %s", key, foo.get(key)));
+      System.out.println(String.format("%-25s : %s", key, foo.get(key).toString()));
     }
   }
 }

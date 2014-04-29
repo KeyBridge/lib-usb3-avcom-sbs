@@ -1,86 +1,98 @@
 package com.keybridgeglobal.sensor.util;
 
 import java.util.Calendar;
-import java.util.logging.Level;
-import java.util.logging.Logger;
 
 /**
+ * A simple stopwatch timer utility that may be used to measure lap and elapsed
+ * times in milliseconds or seconds.
+ * <p/>
+ * This class makes use of the internal system clock. If the system clock is
+ * updated while a stopwatch measurement is running then (perhaps obviously) the
+ * reported elapsed times will be invalid.
+ * <p/>
  * @author jesse
  */
 public class StopWatch {
 
+  /**
+   * The stopwatch start time, recorded in milliseconds on the current system
+   * clock.
+   */
   private long startTime = 0;
+  /**
+   * The stopwatch stop time, recorded in milliseconds on the current system
+   * clock.
+   */
   private long stopTime = 0;
+  /**
+   * Internal boolean indicator that the stopwatch is running (true) or stopped
+   * (false).
+   */
   private boolean running = false;
 
   public StopWatch() {
-    this.start();
-  }
-
-  public void start() {
     this.startTime = Calendar.getInstance().getTimeInMillis();
     this.running = true;
   }
 
-  public void stop() {
+  /**
+   * Start the StopWatch timer.
+   */
+  public void startTimer() {
+    this.startTime = Calendar.getInstance().getTimeInMillis();
+    this.running = true;
+  }
+
+  /**
+   * Stop the StopWatch timer.
+   * <p/>
+   * @return The (total) elapsed time in milliseconds.
+   */
+  public long stopTimer() {
     this.stopTime = Calendar.getInstance().getTimeInMillis();
     this.running = false;
-
-    //    return Calendar.getInstance().getTimeInMillis() - startTime;
+    return stopTime - startTime;
   }
 
   /**
-   * The elapsed time in milliseconds
-   * <p>
-   * @return
+   * The lap time in milliseconds. This method does NOT stop the clock.
+   * <p/>
+   * @return The lap time in milliseconds.
    */
-  public int getElapsedTimeMillis() {
-    int elapsedTime = (int) (Calendar.getInstance().getTimeInMillis() - startTime);
-    //    if (this.running) {
-    //      this.stop();
-    //    }
-    //    return (int) (stopTime - startTime);
-    return elapsedTime;
+  public int getLapTimeMillis() {
+    return (int) (Calendar.getInstance().getTimeInMillis() - startTime);
   }
 
   /**
-   * The elapsed time in seconds
-   * <p>
-   * @return
+   * The lap time in seconds. This method does NOT stop the clock.
+   * <p/>
+   * @return The lap time in seconds.
    */
-  public float getElapsetTimeSeconds() {
-    if (this.running) {
-      this.stop();
+  public double getLapTimeSeconds() {
+    return (Calendar.getInstance().getTimeInMillis() - startTime) / 1000d;
+  }
+
+  /**
+   * The elapsed time in milliseconds. This method STOPS the clock.
+   * <p/>
+   * @return The (total) elapsed time in milliseconds.
+   */
+  public long getElapsedTimeMillis() {
+    if (running) {
+      stopTimer();
     }
-    float millis = stopTime - startTime;
-    float seconds = millis / 1000;
-    return seconds;
+    return stopTime - startTime;
   }
 
   /**
-   * Write this to database
-   * <p>
-   * @param className
-   * @param methodName
+   * The elapsed time in seconds. This method STOPS the clock.
+   * <p/>
+   * @return The elapsed time in seconds.
    */
-  //  public void persist(String className, String methodName) {
-  //    MethodTimer.persist(null, className, methodName, this.getElapsedTimeMillis());
-  //  }
-  /**
-   * stratchpad
-   * <p>
-   * @param args
-   */
-  public static void main(String[] args) {
-    try {
-      StopWatch s = new StopWatch();
-      s.start();
-      Thread.sleep(100);
-      System.out.println("Elapsed: " + s.getElapsedTimeMillis() + " ");
-      Thread.sleep(100);
-      System.out.println("Elapsed: " + s.getElapsedTimeMillis() + " ");
-    } catch (InterruptedException ex) {
-      Logger.getLogger(StopWatch.class.getName()).log(Level.SEVERE, null, ex);
+  public double getElapsedTimeSeconds() {
+    if (running) {
+      stopTimer();
     }
+    return (stopTime - startTime) / 1000d;
   }
 }

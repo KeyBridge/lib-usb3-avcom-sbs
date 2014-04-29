@@ -27,8 +27,10 @@ package org.caulfield.test;
 
 import com.avcomfova.sbs.AvcomSBS;
 import com.avcomfova.sbs.datagram.IDatagram;
-import com.keybridgeglobal.sensor.interfaces.IDatagramListener;
-import com.keybridgeglobal.sensor.util.ByteUtil;
+import com.avcomofva.sbs.datagram.write.SettingsRequest;
+import com.avcomofva.sbs.enumerated.EAvcomReferenceLevel;
+import com.avcomofva.sbs.enumerated.EAvcomResolutionBandwidth;
+import com.avcomfova.sbs.IDatagramListener;
 import com.keybridgeglobal.sensor.util.ftdi.FTDI;
 import java.util.ArrayList;
 import java.util.List;
@@ -47,32 +49,37 @@ public class Test_AvcomSBS implements IDatagramListener {
     System.out.println("DEBUG Test_AvcomSBS");
     Test_AvcomSBS test = new Test_AvcomSBS();
 
-    System.out.println("pid8 " + (0x08 << 4));
-
-    byte pid8 = (byte) (8 << 4);
-    for (int i = 0; i < 8; i++) {
-      System.out.println("pid8[" + i + "] " + ByteUtil.getBit(pid8, i));
-    }
-
 //    AvcomSBS avcom = new AvcomSBS();
 //    UsbDevice usbDevice = test.findAvcomUsbDevice();
     List<UsbDevice> usbDeviceList = FTDI.findFTDIDevices();
+    if (usbDeviceList.isEmpty()) {
+      System.out.println("No AvcomSBS devices attached. EXIT.");
+      return;
+    }
 
     System.out.println("DEBUG Test_AvcomSBS " + usbDeviceList);
 
     AvcomSBS avcom = new AvcomSBS(usbDeviceList.get(0));
     avcom.addListener(test);
-    System.out.println("RUN");
-    avcom.run();
+    avcom.setSettings(new SettingsRequest(1250, 2500, EAvcomReferenceLevel.MINUS_10, EAvcomResolutionBandwidth.ONE_MHZ));
 
-//    System.out.println("avcom device " + usbDevice);
-//    System.out.println("");
-    System.out.println("USB direction values");
-//    System.out.println("mask " + new Byte((byte) 0x80));
-//    System.out.println("mask " + ((byte) 0    x80));
-//    System.out.println("host to device " + (0 << 7));
-//    System.out.pri
-//    ntln("device to host " + (1 << 7));
+//    System.out.println("RUN");
+//    avcom.run();
+    avcom.start();
+
+    Thread.sleep(15000);
+
+    avcom.setSettings(new SettingsRequest(500, 300, EAvcomReferenceLevel.MINUS_50, EAvcomResolutionBandwidth.ONE_MHZ));
+    Thread.sleep(3000);
+
+    avcom.stop();
+//    Map<String, String> configuration = avcom.getConfiguration();
+//    System.out.println("Configuration -------------------");
+//    for (Map.Entry<String, String> entry : configuration.entrySet()) {
+//      System.out.println(entry.getKey() + " = " + entry.getValue());
+//    }
+
+    System.out.println("DEBUG Test_AvcomSBS DONE");
   }
 
   /**
@@ -92,7 +99,7 @@ public class Test_AvcomSBS implements IDatagramListener {
 
   @Override
   public void onDatagram(IDatagram datagram) {
-    System.out.println("DEBUG Test_Acvom onDatagram " + datagram.getDatagramType());
+    System.out.println("DEBUG Test_Acvom onDatagram " + datagram.toString() + " elapsed time " + datagram.getElapsedTimeMillis());
   }
 
   /**

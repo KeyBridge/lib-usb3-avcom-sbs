@@ -49,7 +49,7 @@ public class TraceRequest extends ADatagram {
   public TraceRequest() {
     super(EAvcomDatagram.TRACE_REQUEST);
     this.valid = true;
-    this.elapsedTimeMS = 1;
+    this.elapsedTimeMillis = 1;
     this.transactionId = System.currentTimeMillis();
   }
 
@@ -58,11 +58,14 @@ public class TraceRequest extends ADatagram {
    * fields.
    * <p>
    * @param bytes the byte array returned from the sensor
-   * @return TRUE if parse is successful
+   * @throws java.lang.Exception if the parse operation fails or encounters an
+   *                             error
    */
   @Override
-  public boolean parse(byte[] bytes) {
-    return false;
+  public void parse(byte[] bytes) throws Exception {
+    /**
+     * NO OP
+     */
   }
 
   @Override

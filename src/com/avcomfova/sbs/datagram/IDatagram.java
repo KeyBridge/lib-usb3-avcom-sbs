@@ -115,9 +115,10 @@ public interface IDatagram {
    * fields.
    * <p>
    * @param bytes the byte array returned from the sensor
-   * @return TRUE if parse is successful
+   * @throws java.lang.Exception if the parse operation fails or encounters an
+   *                             error
    */
-  public boolean parse(byte[] bytes);
+  public void parse(byte[] bytes) throws Exception;
 
   /**
    * Convert this datagram into a byte array so it may be sent to the detector
@@ -147,14 +148,14 @@ public interface IDatagram {
    * <p>
    * @return Elapsed time in milliseconds
    */
-  public int getElapsedTimeMS();
+  public long getElapsedTimeMillis();
 
   /**
    * Set the time required for the hardware to collect and create this Datagram
    * <p>
    * @param elapsedTimeMS Elapsed time in milliseconds
    */
-  public void setElapsedTimeMS(int elapsedTimeMS);
+  public void setElapsedTimeMillis(long elapsedTimeMS);
 
   /**
    * Get the datagram type identifier

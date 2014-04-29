@@ -89,9 +89,9 @@ public enum EAvcomDatagram {
   TRACE_RESPONSE_12BIT((byte) 0x0F), // 12-bit encoded waveform data
   // Key Bridge type extension ---------------------------------------------------
   /**
-   * Key Bridge extended Trace response.
+   * Key Bridge extended Trace data container.
    */
-  TRACE_RESPONSE_EXTENDED((byte) 0x0A);
+  TRACE_DATAGRAM((byte) 0xFF);
 
   private final byte byteCode;
 

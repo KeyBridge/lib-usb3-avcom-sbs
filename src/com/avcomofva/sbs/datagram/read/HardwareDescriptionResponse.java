@@ -28,8 +28,13 @@ package com.avcomofva.sbs.datagram.read;
 import com.avcomfova.sbs.datagram.ADatagram;
 import com.avcomofva.sbs.enumerated.*;
 import com.keybridgeglobal.sensor.util.ByteUtil;
-import java.util.Calendar;
-import java.util.Date;
+import java.beans.BeanInfo;
+import java.beans.IntrospectionException;
+import java.beans.Introspector;
+import java.beans.PropertyDescriptor;
+import java.lang.reflect.InvocationTargetException;
+import java.lang.reflect.Method;
+import java.util.*;
 
 /**
  * Avcom Hardware Description Datagram Described in Table 7
@@ -122,12 +127,35 @@ public final class HardwareDescriptionResponse extends ADatagram {
   private Boolean LNBReferenceClockIsOn;
   private Boolean LNBDisablePower;
   // ----------------------------------------------------------------------------
-  // Setting values Device parameters
-  private int maximumFrequencyResponse;
-  private int minimumFrequencyResponse;
-  private final int maximumFrequencySpan = 1300;
-  private final int minimumFrequencySpan = 0;
-  private final double minimumFrequencySpanStep = 0.001;// min span  =  1 kHz = 0.001 MHz
+  // Device status metrics - these are set by the AvcomSBS instance to reflect
+  // current operational status
+  /**
+   * The maximum elapsed time (ms) from all datagram read operations since power
+   * on.
+   */
+  private long elapsedTimeMax = Long.MIN_VALUE;
+  /**
+   * The minimum elapsed time (ms) from all datagram read operations since power
+   * on.
+   */
+  private long elapsedTimeMin = Long.MAX_VALUE;
+  /**
+   * The average elapsed time (ms) of the previous one hundred (100) datagram
+   * read operations. This is a moving average calculation.
+   */
+  private long elapsedTimeAve = 0;
+  /**
+   * The number of datagrams written to the device since power on.
+   */
+  private long datagramWriteCount = 0;
+  /**
+   * The number of GOOD datagrams read out from the device since power on.
+   */
+  private long datagramReadCount = 0;
+  /**
+   * The number of ERROR datagrams read out from the device since power on.
+   */
+  private long datagramErrorCount = 0;
 
   /**
    * Construct a new HardwareDescriptionResponse and populate the internal
@@ -135,12 +163,12 @@ public final class HardwareDescriptionResponse extends ADatagram {
    * <p>
    * @param bytes the byte array returned from the sensor
    */
-  public HardwareDescriptionResponse(byte[] bytes) {
+  public HardwareDescriptionResponse(byte[] bytes) throws Exception {
     super(EAvcomDatagram.HARDWARE_DESCRIPTION_RESPONSE);
-    this.valid = this.parse(bytes);
+    this.parse(bytes);
   }
 
-  //<editor-fold defaultstate="collapsed" desc="Getter Methods">
+  //<editor-fold defaultstate="collapsed" desc="Getter and (some) Setter Methods">
   public int getAvailableComPorts() {
     return availableComPorts;
   }
@@ -179,8 +207,10 @@ public final class HardwareDescriptionResponse extends ADatagram {
 
   public Date getCalibrationDate() {
     Calendar calendar = Calendar.getInstance();
-    calendar.set(calibrationYear, calibrationMonth, calibrationDay);
-//    return calibrationMonth + "/" + calibrationDay + "/" + calibrationYear;
+    /**
+     * Calendar months begin at zero so subtract one.
+     */
+    calendar.set(calibrationYear, calibrationMonth - 1, calibrationDay);
     return calendar.getTime();
   }
 
@@ -224,6 +254,70 @@ public final class HardwareDescriptionResponse extends ADatagram {
     return currentSplitterGainCal;
   }
 
+  public long getDatagramErrorCount() {
+    return datagramErrorCount;
+  }
+
+  /**
+   * Increment the datagram Error Count by one.
+   */
+  public void setDatagramError() {
+    this.datagramErrorCount += 1;
+  }
+
+  public long getDatagramReadCount() {
+    return datagramReadCount;
+  }
+
+  /**
+   * Increment the datagram Read Count by one.
+   */
+  public void setDatagramRead() {
+    this.datagramReadCount += 1;
+  }
+
+  public long getDatagramWriteCount() {
+    return datagramWriteCount;
+  }
+
+  /**
+   * Increment the datagram Write Count by one.
+   */
+  public void setDatagramWrite() {
+    this.datagramWriteCount += 1;
+  }
+
+  public long getElapsedTimeAve() {
+    return elapsedTimeAve;
+  }
+
+  public long getElapsedTimeMax() {
+    return elapsedTimeMax;
+  }
+
+  public long getElapsedTimeMin() {
+    return elapsedTimeMin;
+  }
+
+  /**
+   * Record the elapsed time (ms). This updates the internal max/min/ave values.
+   * <p>
+   * Developer note: The datagram READ/WRITE/ERROR counters MUST be updated
+   * before calling this method as this method internally references those other
+   * values.
+   * <p>
+   * @param elapsedTime the elapsed time of a given read operation.
+   */
+  public void setElapsedTime(long elapsedTime) {
+    elapsedTimeMax = elapsedTimeMax > elapsedTime ? elapsedTimeMax : elapsedTime;
+    elapsedTimeMin = elapsedTimeMin < elapsedTime ? elapsedTimeMin : elapsedTime;
+    /**
+     * If the elapsed time has not been set (==0) then use the current elapsed
+     * time value.
+     */
+    elapsedTimeAve = ((elapsedTimeAve == 0 ? elapsedTime : elapsedTimeAve) * 99 + elapsedTime) / 100;
+  }
+
   public int getFirmwareVersionMajor() {
     return firmwareVersionMajor;
   }
@@ -238,26 +332,6 @@ public final class HardwareDescriptionResponse extends ADatagram {
 
   public int getLNBVoltage() {
     return LNBVoltage;
-  }
-
-  public int getMaximumFrequencyResponse() {
-    return maximumFrequencyResponse;
-  }
-
-  public int getMaximumFrequencySpan() {
-    return maximumFrequencySpan;
-  }
-
-  public int getMinimumFrequencyResponse() {
-    return minimumFrequencyResponse;
-  }
-
-  public int getMinimumFrequencySpan() {
-    return minimumFrequencySpan;
-  }
-
-  public double getMinimumFrequencySpanStep() {
-    return minimumFrequencySpanStep;
   }
 
   public EAvcomPCBRevision getPcbRevision() {
@@ -280,11 +354,11 @@ public final class HardwareDescriptionResponse extends ADatagram {
     return streamMode;
   }
 
-  public Boolean isHasLNBPower() {
+  public Boolean hasLNBPower() {
     return hasLNBPower;
   }
 
-  public Boolean isHasSplitter() {
+  public Boolean hasSplitter() {
     return hasSplitter;
   }
 
@@ -301,14 +375,67 @@ public final class HardwareDescriptionResponse extends ADatagram {
   }//</editor-fold>
 
   /**
+   * Get the device configuration as a sorted Map of configuration name and
+   * configuration value.
+   * <p>
+   * @return a non-null TreeMap instance
+   */
+  public Map<String, String> getConfiguration() {
+    Map<String, String> deviceConfiguration = new TreeMap<>();
+    /**
+     * Use Bean introspection to dump all bean field values into a Map using the
+     * respective field name as the key.
+     */
+    try {
+      BeanInfo beanInfo = Introspector.getBeanInfo(this.getClass());
+      for (PropertyDescriptor propertyDescriptor : beanInfo.getPropertyDescriptors()) {
+        /**
+         * Get the invoked object instance.
+         */
+        Method readMethod = propertyDescriptor.getReadMethod();
+        /**
+         * Skip if no read method for this property.
+         */
+        if (readMethod == null) {
+          continue;
+        }
+        /**
+         * Important: Do not call the read method for "configuration", which is
+         * "getConfiguration", as this will cause an infinite recursion.
+         */
+        if (readMethod.getName().equals("getConfiguration")) {
+          continue;
+        }
+        /**
+         * Load the field names and their values into the Map and return.
+         */
+        try {
+          Object objectInstance = readMethod.invoke(this, (Object[]) null);
+          /**
+           * Note object fields that are empty with "Not configured" to prevent
+           * them being perceived as an error by the user.
+           */
+          deviceConfiguration.put(propertyDescriptor.getDisplayName(),
+                                  (objectInstance == null ? "Not configured" : objectInstance.toString()));
+        } catch (IllegalAccessException | IllegalArgumentException | InvocationTargetException ex) {
+//          Logger.getLogger(HardwareDescriptionResponse.class.getName()).log(Level.SEVERE, null, ex);
+        }
+      }
+    } catch (IntrospectionException introspectionException) {
+    }
+    return deviceConfiguration;
+  }
+
+  /**
    * Parse the byte array returned from the sensor and use it populate internal
    * fields.
    * <p>
    * @param bytes the byte array returned from the sensor
-   * @return TRUE if parse is successful
+   * @throws java.lang.Exception if the parse operation fails or encounters an
+   *                             error
    */
   @Override
-  public boolean parse(byte[] bytes) {
+  public void parse(byte[] bytes) throws Exception {
     // Parse the bytes
     int i;
     /**
@@ -407,28 +534,8 @@ public final class HardwareDescriptionResponse extends ADatagram {
      */
     this.LNBDisablePower = ByteUtil.getBit(bytes[55], 2) != 0;
     // ----------------------------------------------------------------------------
-    // Set the product max/min frequency response
-    if (this.productId != null) {
-      switch (this.productId) {
-        case RSA2150:
-          this.maximumFrequencyResponse = 2250;
-          this.minimumFrequencyResponse = 1;
-          break;
-        case RSA1100:
-          this.maximumFrequencyResponse = 1150;
-          this.minimumFrequencyResponse = 5;
-          break;
-        case RSA2500:
-          this.maximumFrequencyResponse = 2500;
-          this.minimumFrequencyResponse = 5;
-          break;
-        default:
-          this.maximumFrequencyResponse = 2500;
-          this.minimumFrequencyResponse = 5;
-          break;
-      }
-    }
-    return ByteUtil.twoByteIntFromBytes(bytes, 1) == HARDWARE_DESCRIPTION_RESPONSE_LENGTH;
+    this.valid = true;
+//      ByteUtil.twoByteIntFromBytes(bytes, 1) == HARDWARE_DESCRIPTION_RESPONSE_LENGTH;
   }
 
   /**
@@ -447,8 +554,7 @@ public final class HardwareDescriptionResponse extends ADatagram {
    * <p>
    * @return
    */
-  @Override
-  public String toString() {
+  public String toStringFull() {
     // return ByteUtil.toString(datagramData, true);
     if (valid) {
       return "Hardware Description Datagram Contents"
@@ -488,9 +594,8 @@ public final class HardwareDescriptionResponse extends ADatagram {
         + "\n 56 isFirstRun                 " + isFirstRun
         + "\n 57 isLocked                   " + isLocked
         + "\n 58 projectID                0x" + Integer.toHexString(projectID) + " = " + projectID
-        + "\n    maximum frequency resp     " + maximumFrequencyResponse
-        + "\n    minimum frequency resp     " + minimumFrequencyResponse
-        + "\n    calibration date           " + getCalibrationDate();
+        //        + "\n    calibration date           " + calibrationMonth + "/" + calibrationDay + "/" + calibrationYear
+        + "";
     } else {
       return "Hardware Description datagram not initialized.";
     }
@@ -501,14 +606,25 @@ public final class HardwareDescriptionResponse extends ADatagram {
    * <p>
    * @return
    */
-  public String toStringBrief() {
+  @Override
+  public String toString() {
     if (valid) {
-      return "HDR: CF [" + currentCenterFrequencyMHz
-        + "] Span [" + currentSpanMHz
-        + "] RL [" + currentReferenceLevel
-        + "] RBW [" + currentRBW + "]";
+      return "HDR Product [" + productId
+        + "] SN [" + serialNumber
+        + "] FIRMWARE [" + firmwareVersionMajor + "." + firmwareVersionMinor
+        + "] REV [" + pcbRevision
+        + "] CALIBRATED [" + calibrationMonth + "/" + calibrationDay + "/" + calibrationYear
+        + "]";
     } else {
       return "Hardware Description datagram not initialized.";
     }
+  }
+
+  public String toStringSettings() {
+    return "HDR CF [" + currentCenterFrequencyMHz
+      + "] Span [" + currentSpanMHz
+      + "] RL [" + currentReferenceLevel
+      + "] RBW [" + currentRBW
+      + "]";
   }
 }

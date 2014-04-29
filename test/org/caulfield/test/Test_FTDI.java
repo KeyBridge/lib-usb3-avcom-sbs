@@ -25,7 +25,6 @@
  */
 package org.caulfield.test;
 
-import com.keybridgeglobal.sensor.util.ftdi.FTDI;
 import java.util.ArrayList;
 import java.util.List;
 import javax.usb.*;
@@ -43,9 +42,9 @@ public class Test_FTDI {
 //    Test_FTDI test = new Test_FTDI();
 //    UsbDevice device = test.findAvcomUsbDevice();
 
-    FTDI ftdi = new FTDI();
-    ftdi.setBaudRate(115200);
-    ftdi.setDtr(false);
+//    FTDI ftdi = new FTDI();
+//    ftdi.setBaudRate(115200);
+//    ftdi.setDtr(false);
 
   }
 
