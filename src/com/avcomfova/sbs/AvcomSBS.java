@@ -620,7 +620,7 @@ public class AvcomSBS implements Runnable {
      */
     int bytesRead;
     while ((bytesRead = usbPipeRead.syncSubmit(usbPacket)) > 2) {
-//      System.out.println("    READ [" + bytesRead + "] " + ByteUtil.toString(usbPacket));
+      System.out.println("    READ [" + bytesRead + "] " + ByteUtil.toString(usbPacket));
       /**
        * Inspect the USB Packet data bytes for an Avcom STX flag (0x02) and a
        * valid Datagram identifier.
@@ -755,6 +755,7 @@ public class AvcomSBS implements Runnable {
      * The direct method.
      */
     usbPipeWrite.syncSubmit(datagram.serialize());
+    System.out.println("    WRITE [" + datagram.serialize().length + "] " + ByteUtil.toString(datagram.serialize()));
     /**
      * Developer note: Important: Wait a bit for the datagram to be processed
      * (especially new settings) to take effect. Avcom devices need about 2 to 5
