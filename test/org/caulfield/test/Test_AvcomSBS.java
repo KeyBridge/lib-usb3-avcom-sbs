@@ -26,15 +26,18 @@
 package org.caulfield.test;
 
 import com.avcomfova.sbs.AvcomSBS;
+import com.avcomfova.sbs.IDatagramListener;
 import com.avcomfova.sbs.datagram.IDatagram;
 import com.avcomofva.sbs.datagram.write.SettingsRequest;
 import com.avcomofva.sbs.enumerated.EAvcomReferenceLevel;
 import com.avcomofva.sbs.enumerated.EAvcomResolutionBandwidth;
-import com.avcomfova.sbs.IDatagramListener;
+import com.keybridgeglobal.sensor.util.ByteUtil;
 import com.keybridgeglobal.sensor.util.ftdi.FTDI;
 import java.util.ArrayList;
 import java.util.List;
 import javax.usb.*;
+import javax.usb.exception.UsbException;
+import org.usb4java.javax.UsbHub;
 
 /**
  *
@@ -47,19 +50,24 @@ public class Test_AvcomSBS implements IDatagramListener {
 
   public static void main(String[] args) throws UsbException, Exception {
     System.out.println("DEBUG Test_AvcomSBS");
+
+    System.out.println("DEBUG FTDI_USB_CONFIGURATION_WRITE ");
+
+    ByteUtil.toString(FTDI.FTDI_USB_CONFIGURATION_WRITE);
+
     Test_AvcomSBS test = new Test_AvcomSBS();
 
 //    AvcomSBS avcom = new AvcomSBS();
-//    UsbDevice usbDevice = test.findAvcomUsbDevice();
-    List<UsbDevice> usbDeviceList = FTDI.findFTDIDevices();
-    if (usbDeviceList.isEmpty()) {
+//    IUsbDevice iUsbDevice = test.findAvcomIUsbDevice();
+    List<IUsbDevice> iUsbDeviceList = FTDI.findFTDIDevices();
+    if (iUsbDeviceList.isEmpty()) {
       System.out.println("No AvcomSBS devices attached. EXIT.");
       return;
     }
 
-    System.out.println("DEBUG Test_AvcomSBS " + usbDeviceList);
+    System.out.println("DEBUG Test_AvcomSBS " + iUsbDeviceList);
 
-    AvcomSBS avcom = new AvcomSBS(usbDeviceList.get(0));
+    AvcomSBS avcom = new AvcomSBS(iUsbDeviceList.get(0));
     avcom.addListener(test);
     avcom.setSettings(new SettingsRequest(1250, 2500, EAvcomReferenceLevel.MINUS_10, EAvcomResolutionBandwidth.ONE_MHZ));
 
@@ -89,12 +97,12 @@ public class Test_AvcomSBS implements IDatagramListener {
    * @return the first detected Avcom sensor device, null if none are found
    * @throws UsbException if the USB port cannot be read
    */
-  public UsbDevice findAvcomUsbDevice() throws UsbException {
-    UsbServices usbServices = UsbHostManager.getUsbServices();
-    UsbHub virtualRootUsbHub = usbServices.getRootUsbHub();
-    List<UsbDevice> usbDevices = getUSBDeviceList(virtualRootUsbHub, vendorId, productId);
+  public IUsbDevice findAvcomIUsbDevice() throws UsbException {
+    IUsbServices usbServices = UsbHostManager.getUsbServices();
+    IUsbHub virtualRootUsbHub = usbServices.getRootUsbHub();
+    List<IUsbDevice> iUsbDevices = getIUsbDeviceList(virtualRootUsbHub, vendorId, productId);
 
-    return usbDevices.isEmpty() ? null : usbDevices.get(0);
+    return iUsbDevices.isEmpty() ? null : iUsbDevices.get(0);
   }
 
   @Override
@@ -105,13 +113,13 @@ public class Test_AvcomSBS implements IDatagramListener {
   /**
    * Get a List of all devices that match the specified vendor and product id.
    * <p>
-   * @param usbDevice The UsbDevice to check.
-   * @param vendorId  The vendor id to match.
-   * @param productId The product id to match.
-   * @param A         List of any matching UsbDevice(s).
+   * @param iUsbDevice The IUsbDevice to check.
+   * @param vendorId   The vendor id to match.
+   * @param productId  The product id to match.
+   * @param A          List of any matching IUsbDevice(s).
    */
-  private List<UsbDevice> getUSBDeviceList(UsbDevice usbDevice, short vendorId, short productId) {
-    List<UsbDevice> usbDeviceList = new ArrayList<>();
+  private List<IUsbDevice> getIUsbDeviceList(IUsbDevice iUsbDevice, short vendorId, short productId) {
+    List<IUsbDevice> iUsbDeviceList = new ArrayList<>();
     /*
      * A device's descriptor is always available. All descriptor field names and
      * types match exactly what is in the USB specification. Note that Java does
@@ -131,40 +139,41 @@ public class Test_AvcomSBS implements IDatagramListener {
      *
      * See javax.usb.util.UsbUtil.unsignedInt() for some more information.
      */
-    if (vendorId == usbDevice.getUsbDeviceDescriptor().idVendor()
-      && productId == usbDevice.getUsbDeviceDescriptor().idProduct()) {
-      usbDeviceList.add(usbDevice);
+    if (vendorId == iUsbDevice.getUsbDeviceDescriptor().idVendor()
+      && productId == iUsbDevice.getUsbDeviceDescriptor().idProduct()) {
+      iUsbDeviceList.add(iUsbDevice);
     }
     /*
      * If the device is a HUB then recurse and scan the hub connected devices.
      * This is just normal recursion: Nothing special.
      */
-    if (usbDevice.isUsbHub()) {
-      for (Object object : ((UsbHub) usbDevice).getAttachedUsbDevices()) {
-        usbDeviceList.addAll(getUSBDeviceList((UsbDevice) object, vendorId, productId));
+    if (iUsbDevice.isUsbHub()) {
+      for (Object object : ((UsbHub) iUsbDevice).getAttachedUsbDevices()) {
+        iUsbDeviceList.addAll(getIUsbDeviceList((IUsbDevice) object, vendorId, productId));
       }
     }
-    return usbDeviceList;
+    return iUsbDeviceList;
   }
 
   /**
-   * This forms an inclusive list of all UsbDevices connected to this UsbDevice.
+   * This forms an inclusive list of all IUsbDevices connected to this
+   * IUsbDevice.
    * <p>
    * The list includes the provided device. If the device is also a hub, the
    * list will include all devices connected to it, recursively.
    * <p>
-   * @param usbDevice The UsbDevice to use.
-   * @return An inclusive List of all connected UsbDevices.
+   * @param iUsbDevice The IUsbDevice to use.
+   * @return An inclusive List of all connected IUsbDevices.
    */
-  private List<UsbDevice> getUSBDeviceList(UsbDevice usbDevice) {
-    List<UsbDevice> usbDeviceList = new ArrayList<>();
-    usbDeviceList.add(usbDevice);
-    if (usbDevice.isUsbHub()) {
-//      List<UsbDevice> attachedDevices = ((UsbHub) usbDevice).getAttachedUsbDevices();
-      for (Object attachedDevice : ((UsbHub) usbDevice).getAttachedUsbDevices()) {
-        usbDeviceList.addAll(getUSBDeviceList((UsbDevice) attachedDevice));
+  private List<IUsbDevice> getIUsbDeviceList(IUsbDevice iUsbDevice) {
+    List<IUsbDevice> iUsbDeviceList = new ArrayList<>();
+    iUsbDeviceList.add(iUsbDevice);
+    if (iUsbDevice.isUsbHub()) {
+//      List<IUsbDevice> attachedDevices = ((UsbHub) iUsbDevice).getAttachedIUsbDevices();
+      for (Object attachedDevice : ((UsbHub) iUsbDevice).getAttachedUsbDevices()) {
+        iUsbDeviceList.addAll(getIUsbDeviceList((IUsbDevice) attachedDevice));
       }
     }
-    return usbDeviceList;
+    return iUsbDeviceList;
   }
 }

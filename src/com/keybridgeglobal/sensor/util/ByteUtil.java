@@ -1,8 +1,29 @@
+/*
+ * Copyright 2014 Jesse Caulfield <jesse@caulfield.org>.
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *      http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
 package com.keybridgeglobal.sensor.util;
 
 import java.text.DecimalFormat;
 import java.util.Random;
 
+/**
+ * Byte and Bit manipulation utilities. This provides a number of convenience
+ * methods to simplify byte conversion and bit shifting.
+ * <p>
+ * @author Jesse Caulfield <jesse@caulfield.org>
+ */
 @SuppressWarnings("ValueOfIncrementOrDecrementUsed")
 public class ByteUtil {
 
@@ -19,7 +40,7 @@ public class ByteUtil {
    * <p>
    * <b>Example:</b>
    * <code>intToByteArray(258)</code> will return { 0, 0, 1, 2 },
-   * <code>BigInteger.valueOf(258).toByteArray()</code> returns { 1, 2 }.
+   * <code>BigInteger.valueOf(258).toBytes()</code> returns { 1, 2 }.
    * <p>
    * @param integer The integer to be converted.
    * @return The byte array of length 4.
@@ -108,7 +129,7 @@ public class ByteUtil {
   /**
    * Unsigned int from two bytes
    * <p>
-   * @param bytes a byte array
+   * @param bytes a two-byte array
    * @param index the index offset into the byte array to sample
    * @return a two-byte integer
    */
@@ -122,7 +143,7 @@ public class ByteUtil {
   /**
    * Get an unsigned integer from a 4-byte word
    * <p>
-   * @param bytes a byte array
+   * @param bytes a 4-byte array
    * @param index the index offset into the byte array to sample
    * @return a 4-byte long
    */
@@ -133,7 +154,7 @@ public class ByteUtil {
   /**
    * Get a signed or unsigned integer from a 4-byte word.
    * <p>
-   * @param bytes  a byte array
+   * @param bytes  a 4-byte array
    * @param index  the index offset into the byte array to sample
    * @param signed indicator for signed/unsigned integer
    * @return a signed or unsigned integer from a 4-byte word
@@ -159,12 +180,13 @@ public class ByteUtil {
   }
 
   /**
-   * Get an unsigned integer from a single byte Java assumes all Byte integers
-   * are signed and range from -128 to 128. This returns an integer from 0 to
-   * 255
+   * Get an unsigned integer from a single byte.
    * <p>
-   * @param byteValue
-   * @return
+   * Java assumes all Byte integers are signed and range from -128 to 128. This
+   * returns an integer from 0 to 255
+   * <p>
+   * @param byteValue a single byte value
+   * @return an integer from 0 to 255
    */
   public static int intFromByte(byte byteValue) {
     int val = 0;
@@ -176,35 +198,501 @@ public class ByteUtil {
    * Get an unsigned integer from two bytes sampled from within a byte stream,
    * starting at the specified index
    * <p>
-   * @param bytes
-   * @param index
-   * @return
+   * @param bytes a 2-byte array
+   * @param index the index offset into the byte array to sample
+   * @return an unsigned integer
    */
   public static int intFrom2Bytes(byte[] bytes, int index) {
     return ((bytes[index] << 8) + bytes[index + 1]);
   }
 
   //----------------------------------------------------------------------------
-  // From http://snippets.dzone.com/posts/show/93
-  //  public static final byte[] intToByteArray(int value) {
-  //        return new byte[] {
-  //                (byte)(value >>> 24),
-  //                (byte)(value >>> 16),
-  //                (byte)(value >>> 8),
-  //                (byte)value};
-  //}
-  //  public static final int byteArrayToInt(byte [] b) {
-  //        return (b[0] << 24)
-  //                + ((b[1] & 0xFF) << 16)
-  //                + ((b[2] & 0xFF) << 8)
-  //                + (b[3] & 0xFF);
-  //}
+  /**
+   * Get the specified byte's value as an unsigned short.
+   * <p>
+   * This converts the specified byte into a short. The least significant byte
+   * (8 bits) of the short will be identical to the byte (8 bits) provided, and
+   * the most significant byte (8 bits) of the short will be zero.
+   * <p>
+   * For many of the values in this USB API, unsigned bytes are used. However,
+   * since Java does not include unsigned bytes in the language, those unsigned
+   * bytes must be converted to a larger storage type before being used in
+   * unsigned calculations.
+   * <p>
+   * @param b the byte to convert.
+   * @return An unsigned short representing the specified byte.
+   */
+  public static short unsignedShort(byte b) {
+    return (short) (0x00ff & b);
+  }
+
+  /**
+   * Get the specified byte's value as an unsigned integer.
+   * <p>
+   * This converts the specified byte into an integer. The least significant
+   * byte (8 bits) of the integer will be identical to the byte (8 bits)
+   * provided, and the most significant 3 bytes (24 bits) of the integer will be
+   * zero.
+   * <p>
+   * For many of the values in this USB API, unsigned bytes are used. However,
+   * since Java does not include unsigned bytes in the language, those unsigned
+   * bytes must be converted to a larger storage type before being used in
+   * unsigned calculations.
+   * <p>
+   * @param b the byte to convert.
+   * @return An unsigned int representing the specified byte.
+   */
+  public static int unsignedInt(byte b) {
+    return 0x000000ff & b;
+  }
+
+  /**
+   * Get the specified short's value as an unsigned integer.
+   * <p>
+   * This converts the specified byte into an integer. The least significant
+   * short (16 bits) of the integer will be identical to the short (16 bits)
+   * provided, and the most significant 2 bytes (16 bits) of the integer will be
+   * zero.
+   * <p>
+   * For many of the values in this USB API, unsigned shorts are used. However,
+   * since Java does not include unsigned short in the language, those unsigned
+   * shorts must be converted to a larger storage type before being used in
+   * unsigned calculations.
+   * <p>
+   * @param s the short to convert.
+   * @return An unsigned int representing the specified short.
+   */
+  public static int unsignedInt(short s) {
+    return 0x0000ffff & s;
+  }
+
+  /**
+   * Get the specified byte's value as an unsigned long.
+   * <p>
+   * This converts the specified byte into a long. The least significant byte (8
+   * bits) of the long will be identical to the byte (8 bits) provided, and the
+   * most significant 7 bytes (56 bits) of the long will be zero.
+   * <p>
+   * For many of the values in this USB API, unsigned bytes are used. However,
+   * since Java does not include unsigned bytes in the language, those unsigned
+   * bytes must be converted to a larger storage type before being used in
+   * unsigned calculations.
+   * <p>
+   * @param b the byte to convert.
+   * @return An unsigned long representing the specified byte.
+   */
+  public static long unsignedLong(byte b) {
+    return 0x00000000000000ff & b;
+  }
+
+  /**
+   * Get the specified short's value as an unsigned long.
+   * <p>
+   * This converts the specified byte into a long. The least significant short
+   * (16 bits) of the long will be identical to the short (16 bits) provided,
+   * and the most significant 6 bytes (48 bits) of the long will be zero.
+   * <p>
+   * For many of the values in this USB API, unsigned shorts are used. However,
+   * since Java does not include unsigned short in the language, those unsigned
+   * shorts must be converted to a larger storage type before being used in
+   * unsigned calculations.
+   * <p>
+   * @param s the short to convert.
+   * @return An unsigned long representing the specified short.
+   */
+  public static long unsignedLong(short s) {
+    return 0x000000000000ffff & s;
+  }
+
+  /**
+   * Get the specified int's value as an unsigned long.
+   * <p>
+   * This converts the specified int into a long. The least significant int (32
+   * bits) of the long will be identical to the int (32 bits) provided, and the
+   * most significant int (32 bits) of the long will be zero.
+   * <p>
+   * @param i the int to convert.
+   * @return An unsigned long representing the specified int.
+   */
+  public static long unsignedLong(int i) {
+    return 0x00000000ffffffff & i;
+  }
+
+  /**
+   * Convert 2 bytes into a short.
+   * <p>
+   * This converts the 2 bytes into a short. The msb will be the high byte (8
+   * bits) of the short, and the lsb will be the low byte (8 bits) of the short.
+   * <p>
+   * @param msb The Most Significant Byte.
+   * @param lsb The Least Significant Byte.
+   * @return A short representing the bytes.
+   */
+  public static short toShort(byte msb, byte lsb) {
+    return (short) ((0xff00 & (short) (msb << 8)) | (0x00ff & (short) lsb));
+  }
+
+  /**
+   * Convert 4 bytes into an int.
+   * <p>
+   * This converts the 4 bytes into an int.
+   * <p>
+   * @param byte3 The byte to be left-shifted 24 bits.
+   * @param byte2 The byte to be left-shifted 16 bits.
+   * @param byte1 The byte to be left-shifted 8 bits.
+   * @param byte0 The byte that will not be left-shifted.
+   * @return An int representing the bytes.
+   */
+  public static int toInt(byte byte3, byte byte2, byte byte1, byte byte0) {
+    return toInt(toShort(byte3, byte2), toShort(byte1, byte0));
+  }
+
+  /**
+   * Convert 8 bytes into a long.
+   * <p>
+   * This converts the 8 bytes into a long.
+   * <p>
+   * @param byte7 The byte to be left-shifted 56 bits.
+   * @param byte6 The byte to be left-shifted 48 bits.
+   * @param byte5 The byte to be left-shifted 40 bits.
+   * @param byte4 The byte to be left-shifted 32 bits.
+   * @param byte3 The byte to be left-shifted 24 bits.
+   * @param byte2 The byte to be left-shifted 16 bits.
+   * @param byte1 The byte to be left-shifted 8 bits.
+   * @param byte0 The byte that will not be left-shifted.
+   * @return A long representing the bytes.
+   */
+  public static long toLong(byte byte7, byte byte6, byte byte5, byte byte4, byte byte3, byte byte2, byte byte1, byte byte0) {
+    return toLong(toInt(byte7, byte6, byte5, byte4), toInt(byte3, byte2, byte1, byte0));
+  }
+
+  /**
+   * Convert 2 shorts into an int.
+   * <p>
+   * This converts the 2 shorts into an int.
+   * <p>
+   * @param mss The Most Significant Short.
+   * @param lss The Least Significant Short.
+   * @return An int representing the shorts.
+   */
+  public static int toInt(short mss, short lss) {
+    return ((0xffff0000 & mss << 16) | (0x0000ffff & (int) lss));
+  }
+
+  /**
+   * Convert 4 shorts into a long.
+   * <p>
+   * This converts the 4 shorts into a long.
+   * <p>
+   * @param short3 The short to be left-shifted 48 bits.
+   * @param short2 The short to be left-shifted 32 bits.
+   * @param short1 The short to be left-shifted 16 bits.
+   * @param short0 The short that will not be left-shifted.
+   * @return A long representing the shorts.
+   */
+  public static long toLong(short short3, short short2, short short1, short short0) {
+    return toLong(toInt(short3, short2), toInt(short1, short0));
+  }
+
+  /**
+   * Convert 2 ints into a long.
+   * <p>
+   * This converts the 2 ints into a long.
+   * <p>
+   * @param msi The Most Significant Int.
+   * @param lsi The Least Significant Int.
+   * @return A long representing the ints.
+   */
+  public static long toLong(int msi, int lsi) {
+    /*
+     * We can't represent a mask for the MSI, but that's ok, we don't really
+     * need one; left-shifting sets the low bits to 0.
+     */
+    return (long) msi << 32 | (long) 0x00000000ffffffff & (long) lsi;
+  }
+
+  /**
+   * Format a byte into a proper length hex String.
+   * <p>
+   * This is identical to Long.toHexString() except this pads (with 0's) to the
+   * proper size.
+   * <p>
+   * @param b the byte to convert
+   * @return the byte, converted to a hex string.
+   */
+  public static String toHexString(byte b) {
+    return toHexString(unsignedLong(b), '0', 2, 2);
+  }
+
+  /**
+   * Format a short into a proper length hex String.
+   * <p>
+   * This is identical to Long.toHexString() except this pads (with 0's) to the
+   * proper size.
+   * <p>
+   * @param s the short to convert
+   * @return the short, converted to a hex string.
+   */
+  public static String toHexString(short s) {
+    return toHexString(unsignedLong(s), '0', 4, 4);
+  }
+
+  /**
+   * Format a int into a proper length hex String.
+   * <p>
+   * This is identical to Long.toHexString() except this pads (with 0's) to the
+   * proper size.
+   * <p>
+   * @param i the integer to convert
+   * @return the integer, converted to a hex string.
+   */
+  public static String toHexString(int i) {
+    return toHexString(unsignedLong(i), '0', 8, 8);
+  }
+
+  /**
+   * Format a long into the specified length hex String.
+   * <p>
+   * This is identical to Long.toHexString() except this pads (with 0's) to the
+   * proper size.
+   * <p>
+   * @param l the long to convert
+   * @return the long, converted to a hex string.
+   */
+  public static String toHexString(long l) {
+    return toHexString(l, '0', 16, 16);
+  }
+
+  /**
+   * Format a long into the specified length hex String.
+   * <p>
+   * This is identical to Long.toHexString() except this pads (with 0's), or
+   * truncates, to the specified size. If max &lt; min the functionality is
+   * exactly as Long.toHexString().
+   * <p>
+   * @param l   the long to convert
+   * @param c   the character to use for padding
+   * @param min the min length of the resulting String
+   * @param max the max length of the resulting String
+   * @return the long, converted to a hex string.
+   */
+  public static String toHexString(long l, char c, int min, int max) {
+    StringBuilder sb = new StringBuilder(Long.toHexString(l));
+
+    if (max < min) {
+      return sb.toString();
+    }
+
+    while (sb.length() < max) {
+      sb.insert(0, c);
+    }
+
+    return sb.substring(sb.length() - min);
+  }
+
+  /**
+   * Format a byte[] into a hex String.
+   * <p>
+   * This creates a String by concatenating the result of
+   * <code>delimiter + {@link #toHexString(byte) toHexString(byte)}</code> for
+   * each byte in the array. If the specified length is greater than the actual
+   * array length, the array length is used. If the specified length (or array
+   * length) is 0 or less, the resulting String will be an empty String.
+   * <p>
+   * @param delimiter The delimiter to prefix every byte with.
+   * @param array     The byte[] to convert.
+   * @param length    The number of bytes to use.
+   * @return A String representing the byte[].
+   * @exception NullPointerException If the byte[] is null.
+   */
+  @SuppressWarnings("AssignmentToMethodParameter")
+  public static String toHexString(String delimiter, byte[] array, int length) {
+    StringBuilder sb = new StringBuilder();
+
+    if (length > array.length) {
+      length = array.length;
+    }
+
+    if (length < 0) {
+      length = 0;
+    }
+
+    for (int i = 0; i < length; i++) {
+      sb.append(delimiter).append(toHexString(array[i]));
+    }
+
+    return sb.toString();
+  }
+
+  /**
+   * Format a short[] into a hex String.
+   * <p>
+   * This creates a String by concatenating the result of
+   * <code>delimiter + {@link #toHexString(short) toHexString(short)}</code> for
+   * each short in the array. If the specified length is greater than the actual
+   * array length, the array length is used. If the specified length (or array
+   * length) is 0 or less, the resulting String will be an empty String.
+   * <p>
+   * @param delimiter The delimiter to prefix every short with.
+   * @param array     The short[] to convert.
+   * @param length    The number of shorts to use.
+   * @return A String representing the short[].
+   * @exception NullPointerException If the short[] is null.
+   */
+  @SuppressWarnings("AssignmentToMethodParameter")
+  public static String toHexString(String delimiter, short[] array, int length) {
+    StringBuilder sb = new StringBuilder();
+
+    if (length > array.length) {
+      length = array.length;
+    }
+
+    if (length < 0) {
+      length = 0;
+    }
+
+    for (int i = 0; i < length; i++) {
+      sb.append(delimiter).append(toHexString(array[i]));
+    }
+
+    return sb.toString();
+  }
+
+  /**
+   * Format a int[] into a hex String.
+   * <p>
+   * This creates a String by concatenating the result of
+   * <code>delimiter + {@link #toHexString(int) toHexString(int)}</code> for
+   * each int in the array. If the specified length is greater than the actual
+   * array length, the array length is used. If the specified length (or array
+   * length) is 0 or less, the resulting String will be an empty String.
+   * <p>
+   * @param delimiter The delimiter to prefix every int with.
+   * @param array     The int[] to convert.
+   * @param length    The number of ints to use.
+   * @return A String representing the int[].
+   * @exception NullPointerException If the int[] is null.
+   */
+  @SuppressWarnings("AssignmentToMethodParameter")
+  public static String toHexString(String delimiter, int[] array, int length) {
+    StringBuilder sb = new StringBuilder();
+
+    if (length > array.length) {
+      length = array.length;
+    }
+
+    if (length < 0) {
+      length = 0;
+    }
+
+    for (int i = 0; i < length; i++) {
+      sb.append(delimiter).append(toHexString(array[i]));
+    }
+
+    return sb.toString();
+  }
+
+  /**
+   * Format a long[] into a hex String.
+   * <p>
+   * This creates a String by concatenating the result of
+   * <code>delimiter + {@link #toHexString(long) toHexString(long)}</code> for
+   * each long in the array. If the specified length is greater than the actual
+   * array length, the array length is used. If the specified length (or array
+   * length) is 0 or less, the resulting String will be an empty String.
+   * <p>
+   * @param delimiter The delimiter to prefix every long with.
+   * @param array     The long[] to convert.
+   * @param length    The number of longs to use.
+   * @return A String representing the long[].
+   * @exception NullPointerException If the long[] is null.
+   */
+  @SuppressWarnings("AssignmentToMethodParameter")
+  public static String toHexString(String delimiter, long[] array, int length) {
+    StringBuilder sb = new StringBuilder();
+
+    if (length > array.length) {
+      length = array.length;
+    }
+
+    if (length < 0) {
+      length = 0;
+    }
+
+    for (int i = 0; i < length; i++) {
+      sb.append(delimiter).append(toHexString(array[i]));
+    }
+
+    return sb.toString();
+  }
+
+  /**
+   * Format a byte[] into a hex String.
+   * <p>
+   * This calls
+   * {@link #toHexString(String,byte[],int) toHexString(delimiter, array, array.length)}.
+   * <p>
+   * @param delimiter The delimiter to prefix every byte with.
+   * @param array     The byte[] to convert.
+   * @return A String representing the byte[].
+   * @exception NullPointerException If the byte[] is null.
+   */
+  public static String toHexString(String delimiter, byte[] array) {
+    return toHexString(delimiter, array, array.length);
+  }
+
+  /**
+   * Format a short[] into a hex String.
+   * <p>
+   * This calls
+   * {@link #toHexString(String,short[],int) toHexString(delimiter, array, array.length)}.
+   * <p>
+   * @param delimiter The delimiter to prefix every short with.
+   * @param array     The short[] to convert.
+   * @return A String representing the short[].
+   * @exception NullPointerException If the short[] is null.
+   */
+  public static String toHexString(String delimiter, short[] array) {
+    return toHexString(delimiter, array, array.length);
+  }
+
+  /**
+   * Format a int[] into a hex String.
+   * <p>
+   * This calls
+   * {@link #toHexString(String,int[],int) toHexString(delimiter, array, array.length)}.
+   * <p>
+   * @param delimiter The delimiter to prefix every int with.
+   * @param array     The int[] to convert.
+   * @return A String representing the int[].
+   * @exception NullPointerException If the int[] is null.
+   */
+  public static String toHexString(String delimiter, int[] array) {
+    return toHexString(delimiter, array, array.length);
+  }
+
+  /**
+   * Format a long[] into a hex String.
+   * <p>
+   * This calls
+   * {@link #toHexString(String,long[],int) toHexString(delimiter, array, array.length)}.
+   * <p>
+   * @param delimiter The delimiter to prefix every long with.
+   * @param array     The long[] to convert.
+   * @return A String representing the long[].
+   * @exception NullPointerException If the long[] is null.
+   */
+  public static String toHexString(String delimiter, long[] array) {
+    return toHexString(delimiter, array, array.length);
+  }
+
   //----------------------------------------------------------------------------
+  // From http://snippets.dzone.com/posts/show/93
   /**
    * Get an unsigned integer from a two bytes
    * <p>
-   * @param bytes
-   * @return
+   * @param bytes a two-byte array
+   * @return an unsigned integer
    */
   public static int intFrom2Bytes(byte[] bytes) {
     return intFrom2Bytes(bytes, 0);
@@ -213,9 +701,9 @@ public class ByteUtil {
   /**
    * Unsigned Long from 8 bytes
    * <p>
-   * @param bytes
-   * @param index
-   * @return
+   * @param bytes an 8-byte array
+   * @param index the index offset into the byte array to sample
+   * @return Unsigned Long
    */
   public static long longFromBytes(byte[] bytes, int index) {
     if ((bytes == null) || (bytes.length < 7)) {
@@ -234,12 +722,12 @@ public class ByteUtil {
   }
 
   /**
-   * Tests whether one byte array contains another
+   * Tests whether one byte array contains another.
    * <p>
-   * @param a          the byte array to examin
+   * @param a          the byte array to examine
    * @param b          the byte array we're looking for
    * @param startIndex the index in a to begin looking
-   * @return
+   * @return TRUE if the first byte array contains the second
    */
   public static boolean contains(byte[] a, byte[] b, int startIndex) {
     boolean isEqual = false;
@@ -257,9 +745,10 @@ public class ByteUtil {
   /**
    * Unsigned Long to 8 bytes
    * <p>
-   * @param l
-   * @param arr
-   * @param startIdx
+   * @param l        a Java long
+   * @param arr      a byte array, 8-bytes or longer
+   * @param startIdx the start index into the array where the LONG should be
+   *                 written
    */
   public static void longToBytes(long l, byte[] arr, int startIdx) {
     if (arr == null) {
@@ -298,10 +787,11 @@ public class ByteUtil {
   }
 
   /**
-   * reverse the order of bytes attempt at big/little endian
+   * Reverse the order of bytes in an array. This is an attempt at big/little
+   * endian conversion.
    * <p>
-   * @param in
-   * @return
+   * @param in the byte array to reverse
+   * @return the reversed byte array (copy of)
    */
   public static byte[] reverse(byte[] in) {
     int len = in.length;
@@ -313,12 +803,13 @@ public class ByteUtil {
   }
 
   /**
-   * converts a byte stream to a printable string of bytes, optionally with
-   * spaces
+   * Convert a byte stream to a printable string of bytes, optionally with
+   * spaces between each byte value.
    * <p>
-   * @param bytes
-   * @param spaces
-   * @return
+   * @param bytes  an array of bytes
+   * @param spaces indicator that each byte should be separated by a space
+   *               character
+   * @return a (potentially very long) non-null String
    */
   public static String toString(byte[] bytes, boolean spaces) {
     StringBuilder sb = new StringBuilder();
@@ -331,7 +822,7 @@ public class ByteUtil {
   }
 
   /**
-   * Bring a byte array with a numbered header. This produces a multi-line
+   * Format a byte array with a numbered header. This produces a multi-line
    * output useful for identifying each byte hex value and its corresponding
    * index. Example output:
    * <pre>
@@ -346,7 +837,7 @@ public class ByteUtil {
    * @return a multi-line string showing each byte and its corresponding index
    *         value
    */
-  public static String toStringWithIndex(byte[] bytes) {
+  public static String toStringFormatted(byte[] bytes) {
     StringBuilder sb = new StringBuilder();
     DecimalFormat df = new DecimalFormat("00 | ");
     if (bytes != null) {
@@ -377,20 +868,47 @@ public class ByteUtil {
     return sb.toString();
   }
 
+  public static String toStringFormatted(byte byteCode) {
+    StringBuilder sb = new StringBuilder("+---------------+\n|");
+    for (int i = 0; i < 8; i++) {
+      sb.append(i).append(i == 7 ? "" : " ");
+    }
+    sb.append("|\n+---------------+\n|");
+    for (int i = 0; i < 8; i++) {
+      sb.append(getBit(byteCode, i)).append(i == 7 ? "" : " ");
+    }
+    sb.append("|\n+---------------+\n|");
+    return sb.toString();
+  }
+
   /**
-   * converts a byte stream to a printable string of bytes with spaces
+   * Format a byte array to a printable String with spaces. This is a shortcut
+   * to {@link #toString(byte[], true)}
    * <p>
-   * @param bytes
-   * @return
+   * @param bytes an array of bytes
+   * @return a (potentially very long) non-null String
    */
   public static String toString(byte[] bytes) {
     return toString(bytes, true);
   }
 
+  /**
+   * Print an integer as a Hex String.
+   * <p>
+   * @param number an integer number
+   * @return the number as a Hex String.
+   */
   public static String toString(int number) {
     return Integer.toHexString(number);
   }
 
+  /**
+   * Generate an array containing a random sequence of bytes. This is useful for
+   * testing when a non-null, non-zero data payload is needed.
+   * <p>
+   * @param size the desired array size
+   * @return a byte array
+   */
   public static byte[] randomBytes(int size) {
     byte[] bytes = new byte[size];
     Random random = new Random();
@@ -401,12 +919,15 @@ public class ByteUtil {
   }
 
   /**
-   * copy the pattern of bytes iteration times. returns a byte[] that is pattern
-   * * iteration
+   * Copy a repeated pattern of bytes into a larger byte array the specified
+   * number of times. This is useful for testing when a non-null, non-zero data
+   * payload is needed.
    * <p>
-   * @param pattern
-   * @param iterations
-   * @return
+   * The returned byte array is pattern.size * iterations long.
+   * <p>
+   * @param pattern    the desired byte pattern to repeat
+   * @param iterations the number of iterations to repeat
+   * @return a byte[] array that contains a repeating pattern iteration.
    */
   public static byte[] patternBytes(byte[] pattern, int iterations) {
     byte[] bytes = new byte[pattern.length * iterations];
@@ -419,172 +940,175 @@ public class ByteUtil {
   //----------------------------------------------------------------------------
   // Byte Conversion Utilities 
   // from: http://www.daniweb.com/code/snippet216874.html#
-
-  /*
-   * "primitive type --> byte[] data" Methods
-   */
-  public static byte[] toByteArray(byte data) {
+  //"primitive type --> byte[] data" Methods
+  public static byte[] toBytes(byte data) {
     return new byte[]{data};
   }
 
-  public static byte[] toByteArray(byte[] data) {
+  public static byte[] toBytes(byte[] data) {
     return data;
   }
 
-  public static byte[] toByteArray(short data) {
+  /**
+   * Convert a SHORT into a two-byte array.
+   * <p>
+   * @param data a short number
+   * @return a two-byte array
+   */
+  public static byte[] toBytes(short data) {
     return new byte[]{(byte) ((data >> 8) & 0xff), (byte) ((data) & 0xff),};
   }
 
-  public static byte[] toByteArray(short[] data) {
+  public static byte[] toBytes(short[] data) {
     if (data == null) {
       return null;
     }
-    // ----------
-    byte[] byts = new byte[data.length * 2];
+    byte[] bytes = new byte[data.length * 2];
     for (int i = 0; i < data.length; i++) {
-      System.arraycopy(toByteArray(data[i]), 0, byts, i * 2, 2);
+      System.arraycopy(toBytes(data[i]), 0, bytes, i * 2, 2);
     }
-    return byts;
+    return bytes;
   }
 
-  public static byte[] toByteArray(char data) {
-    return new byte[]{(byte) ((data >> 8) & 0xff), (byte) ((data >> 0) & 0xff),};
+  public static byte[] toBytes(char data) {
+    return new byte[]{(byte) ((data >> 8) & 0xff), (byte) (data & 0xff),};
   }
 
-  public static byte[] toByteArray(char[] data) {
+  public static byte[] toBytes(char[] data) {
     if (data == null) {
       return null;
     }
-    // ----------
-    byte[] byts = new byte[data.length * 2];
+    byte[] bytes = new byte[data.length * 2];
     for (int i = 0; i < data.length; i++) {
-      System.arraycopy(toByteArray(data[i]), 0, byts, i * 2, 2);
+      System.arraycopy(toBytes(data[i]), 0, bytes, i * 2, 2);
     }
-    return byts;
+    return bytes;
   }
 
-  public static byte[] toByteArray(int data) {
-    return new byte[]{(byte) ((data >> 24) & 0xff), (byte) ((data >> 16) & 0xff), (byte) ((data >> 8) & 0xff), (byte) ((data >> 0) & 0xff),};
+  public static byte[] toBytes(int data) {
+    return new byte[]{(byte) ((data >> 24) & 0xff),
+                      (byte) ((data >> 16) & 0xff),
+                      (byte) ((data >> 8) & 0xff),
+                      (byte) ((data) & 0xff)};
   }
 
-  public static byte[] toByteArray(int[] data) {
+  public static byte[] toBytes(int[] data) {
     if (data == null) {
       return null;
     }
-    // ----------
-    byte[] byts = new byte[data.length * 4];
+    byte[] bytes = new byte[data.length * 4];
     for (int i = 0; i < data.length; i++) {
-      System.arraycopy(toByteArray(data[i]), 0, byts, i * 4, 4);
+      System.arraycopy(toBytes(data[i]), 0, bytes, i * 4, 4);
     }
-    return byts;
+    return bytes;
   }
 
-  public static byte[] toByteArray(long data) {
-    return new byte[]{(byte) ((data >> 56) & 0xff), (byte) ((data >> 48) & 0xff), (byte) ((data >> 40) & 0xff), (byte) ((data >> 32) & 0xff),
-                      (byte) ((data >> 24) & 0xff), (byte) ((data >> 16) & 0xff), (byte) ((data >> 8) & 0xff), (byte) ((data >> 0) & 0xff),};
+  public static byte[] toBytes(long data) {
+    return new byte[]{(byte) ((data >> 56) & 0xff),
+                      (byte) ((data >> 48) & 0xff),
+                      (byte) ((data >> 40) & 0xff),
+                      (byte) ((data >> 32) & 0xff),
+                      (byte) ((data >> 24) & 0xff),
+                      (byte) ((data >> 16) & 0xff),
+                      (byte) ((data >> 8) & 0xff),
+                      (byte) ((data) & 0xff),};
   }
 
-  public static byte[] toByteArray(long[] data) {
+  public static byte[] toBytes(long[] data) {
     if (data == null) {
       return null;
     }
-    // ----------
-    byte[] byts = new byte[data.length * 8];
+    byte[] bytes = new byte[data.length * 8];
     for (int i = 0; i < data.length; i++) {
-      System.arraycopy(toByteArray(data[i]), 0, byts, i * 8, 8);
+      System.arraycopy(toBytes(data[i]), 0, bytes, i * 8, 8);
     }
-    return byts;
+    return bytes;
   }
 
-  public static byte[] toByteArray(float data) {
-    return toByteArray(Float.floatToRawIntBits(data));
+  public static byte[] toBytes(float data) {
+    return toBytes(Float.floatToRawIntBits(data));
   }
 
-  public static byte[] toByteArray(float[] data) {
+  public static byte[] toBytes(float[] data) {
     if (data == null) {
       return null;
     }
-    // ----------
-    byte[] byts = new byte[data.length * 4];
+    byte[] bytes = new byte[data.length * 4];
     for (int i = 0; i < data.length; i++) {
-      System.arraycopy(toByteArray(data[i]), 0, byts, i * 4, 4);
+      System.arraycopy(toBytes(data[i]), 0, bytes, i * 4, 4);
     }
-    return byts;
+    return bytes;
   }
 
-  public static byte[] toByteArray(Double data) {
-    return toByteArray(Double.doubleToRawLongBits(data));
+  public static byte[] toBytes(Double data) {
+    return toBytes(Double.doubleToRawLongBits(data));
   }
 
-  public static byte[] toByteArray(Double[] data) {
+  public static byte[] toBytes(Double[] data) {
     if (data == null) {
       return null;
     }
-    // ----------
-    byte[] byts = new byte[data.length * 8];
+    byte[] bytes = new byte[data.length * 8];
     for (int i = 0; i < data.length; i++) {
-      System.arraycopy(toByteArray(data[i]), 0, byts, i * 8, 8);
+      System.arraycopy(toBytes(data[i]), 0, bytes, i * 8, 8);
     }
-    return byts;
+    return bytes;
   }
 
-  public static byte[] toByteArray(double data) {
-    return toByteArray(Double.doubleToRawLongBits(data));
+  public static byte[] toBytes(double data) {
+    return toBytes(Double.doubleToRawLongBits(data));
   }
 
-  public static byte[] toByteArray(double[] data) {
+  public static byte[] toBytes(double[] data) {
     if (data == null) {
       return null;
     }
-    // ----------
-    byte[] byts = new byte[data.length * 8];
+    byte[] bytes = new byte[data.length * 8];
     for (int i = 0; i < data.length; i++) {
-      System.arraycopy(toByteArray(data[i]), 0, byts, i * 8, 8);
+      System.arraycopy(toBytes(data[i]), 0, bytes, i * 8, 8);
     }
-    return byts;
+    return bytes;
   }
 
-  public static byte[] toByteArray(boolean data) {
+  public static byte[] toBytes(boolean data) {
     return new byte[]{(byte) (data ? 0x01 : 0x00)}; // bool -> {1 byte}
   }
 
-  public static byte[] toByteArray(boolean[] data) {
-    // Advanced Technique: The byte array containts information
-    // about how many boolean values are involved, so the exact
-    // array is returned when later decoded.
-    // ----------
+  public static byte[] toBytes(boolean[] data) {
+    /**
+     * Advanced Technique: The byte array contains information about how many
+     * boolean values are involved, so the exact array is returned when later
+     * decoded.
+     */
     if (data == null) {
       return null;
     }
-    // ----------
     int len = data.length;
-    byte[] lena = toByteArray(len); // int conversion; length array = lena
-    byte[] byts = new byte[lena.length + (len / 8) + (len % 8 != 0 ? 1 : 0)];
+    byte[] lena = toBytes(len); // int conversion; length array = lena
+    byte[] bytes = new byte[lena.length + (len / 8) + (len % 8 != 0 ? 1 : 0)];
     // (Above) length-array-length + sets-of-8-booleans +? byte-for-remainder
-    System.arraycopy(lena, 0, byts, 0, lena.length);
-    // ----------
+    System.arraycopy(lena, 0, bytes, 0, lena.length);
     // (Below) algorithm by Matthew Cudmore: boolean[] -> bits -> byte[]
     for (int i = 0, j = lena.length, k = 7; i < data.length; i++) {
-      byts[j] |= (data[i] ? 1 : 0) << k--;
+      bytes[j] |= (data[i] ? 1 : 0) << k--;
       if (k < 0) {
         j++;
         k = 7;
       }
     }
-    // ----------
-    return byts;
+    return bytes;
   }
 
-  public static byte[] toByteArray(String data) {
+  public static byte[] toBytes(String data) {
     return (data == null) ? null : data.getBytes();
   }
 
-  public static byte[] toByteArray(String[] data) {
-    // Advanced Technique: Generates an indexed byte array
-    // which contains the array of Strings. The byte array
-    // contains information about the number of Strings and
-    // the length of each String.
-    // ----------
+  public static byte[] toBytes(String[] data) {
+    /**
+     * Advanced Technique: Generates an indexed byte array which contains the
+     * array of Strings. The byte array contains information about the number of
+     * Strings and the length of each String.
+     */
     if (data == null) {
       return null;
     }
@@ -592,7 +1116,7 @@ public class ByteUtil {
     int totalLength = 0; // Measure length of final byte array
     int bytesPos = 0; // Used later
     // ----- arrays:
-    byte[] dLen = toByteArray(data.length); // byte array of data length
+    byte[] dLen = toBytes(data.length); // byte array of data length
     totalLength += dLen.length;
     int[] sLens = new int[data.length]; // String lengths = sLens
     totalLength += (sLens.length * 4);
@@ -600,7 +1124,7 @@ public class ByteUtil {
     // ----- pack strs:
     for (int i = 0; i < data.length; i++) {
       if (data[i] != null) {
-        strs[i] = toByteArray(data[i]);
+        strs[i] = toBytes(data[i]);
         sLens[i] = strs[i].length;
         totalLength += strs[i].length;
       } else {
@@ -608,10 +1132,9 @@ public class ByteUtil {
         strs[i] = new byte[0]; // prevent null entries
       }
     }
-    // ----------
     byte[] bytes = new byte[totalLength]; // final array
     System.arraycopy(dLen, 0, bytes, 0, 4);
-    byte[] bsLens = toByteArray(sLens); // byte version of String sLens
+    byte[] bsLens = toBytes(sLens); // byte version of String sLens
     System.arraycopy(bsLens, 0, bytes, 4, bsLens.length);
     // -----
     bytesPos += 4 + bsLens.length; // mark position
@@ -620,14 +1143,10 @@ public class ByteUtil {
       System.arraycopy(sba, 0, bytes, bytesPos, sba.length);
       bytesPos += sba.length;
     }
-    // ----------
     return bytes;
   }
 
-
-  /*
-   * "byte[] data --> primitive type" Methods
-   */
+  //"byte[] data --> primitive type" Methods
   public static byte toByte(byte[] data) {
     return ((data == null) || (data.length == 0)) ? 0x0 : data[0];
   }
@@ -636,15 +1155,13 @@ public class ByteUtil {
     if ((data == null) || (data.length != 2)) {
       return 0x0;
     }
-    // ----------
-    return (short) ((0xff & data[0]) << 8 | (0xff & data[1]) << 0);
+    return (short) ((0xff & data[0]) << 8 | (0xff & data[1]));
   }
 
   public static short[] toShortArray(byte[] data) {
     if ((data == null) || (data.length % 2 != 0)) {
       return null;
     }
-    // ----------
     short[] shts = new short[data.length / 2];
     for (int i = 0; i < shts.length; i++) {
       shts[i] = toShort(new byte[]{data[(i * 2)], data[(i * 2) + 1]});
@@ -656,15 +1173,13 @@ public class ByteUtil {
     if ((data == null) || (data.length != 2)) {
       return 0x0;
     }
-    // ----------
-    return (char) ((0xff & data[0]) << 8 | (0xff & data[1]) << 0);
+    return (char) ((0xff & data[0]) << 8 | (0xff & data[1]));
   }
 
   public static char[] toCharArray(byte[] data) {
     if ((data == null) || (data.length % 2 != 0)) {
       return null;
     }
-    // ----------
     char[] chrs = new char[data.length / 2];
     for (int i = 0; i < chrs.length; i++) {
       chrs[i] = toChar(new byte[]{data[(i * 2)], data[(i * 2) + 1],});
@@ -676,16 +1191,14 @@ public class ByteUtil {
     if ((data == null) || (data.length != 4)) {
       return 0x0;
     }
-    // ----------
     return ( // NOTE: type cast not necessary for int
-      (0xff & data[0]) << 24 | (0xff & data[1]) << 16 | (0xff & data[2]) << 8 | (0xff & data[3]) << 0);
+      (0xff & data[0]) << 24 | (0xff & data[1]) << 16 | (0xff & data[2]) << 8 | (0xff & data[3]));
   }
 
   public static int[] toIntArray(byte[] data) {
     if ((data == null) || (data.length % 4 != 0)) {
       return null;
     }
-    // ----------
     int[] ints = new int[data.length / 4];
     for (int i = 0; i < ints.length; i++) {
       ints[i] = toInt(new byte[]{data[(i * 4)], data[(i * 4) + 1], data[(i * 4) + 2], data[(i * 4) + 3],});
@@ -697,20 +1210,18 @@ public class ByteUtil {
     if ((data == null) || (data.length != 8)) {
       return 0x0;
     }
-    // ----------
     return ( /**
        * (Below) convert to longs before shift because digits are lost with ints
        * beyond the 32-bit limit
        */
       (long) (0xff & data[0]) << 56 | (long) (0xff & data[1]) << 48 | (long) (0xff & data[2]) << 40 | (long) (0xff & data[3]) << 32
-      | (long) (0xff & data[4]) << 24 | (long) (0xff & data[5]) << 16 | (long) (0xff & data[6]) << 8 | (long) (0xff & data[7]) << 0);
+      | (long) (0xff & data[4]) << 24 | (long) (0xff & data[5]) << 16 | (long) (0xff & data[6]) << 8 | (long) (0xff & data[7]));
   }
 
   public static long[] toLongArray(byte[] data) {
     if ((data == null) || (data.length % 8 != 0)) {
       return null;
     }
-    // ----------
     long[] lngs = new long[data.length / 8];
     for (int i = 0; i < lngs.length; i++) {
       lngs[i] = toLong(new byte[]{data[(i * 8)], data[(i * 8) + 1], data[(i * 8) + 2], data[(i * 8) + 3], data[(i * 8) + 4], data[(i * 8) + 5],
@@ -786,7 +1297,6 @@ public class ByteUtil {
     return bools;
   }
 
-//  public static String toString(byte[] data) {    return (data == null) ? null : new String(data);  }
   /**
    * Extract the String array length from the first four bytes in the char
    * array, and then read the int array denoting the String lengths, and then
@@ -813,21 +1323,21 @@ public class ByteUtil {
       return null;
     }
 
-    String[] strs = new String[saLen];
+    String[] strings = new String[saLen];
     for (int i = 0, dataPos = 4 + (saLen * 4); i < saLen; i++) {
       if (sLens[i] > 0) {
         if (data.length >= (dataPos + sLens[i])) {
           bBuff = new byte[sLens[i]];
           System.arraycopy(data, dataPos, bBuff, 0, sLens[i]);
           dataPos += sLens[i];
-          strs[i] = toString(bBuff);
+          strings[i] = toString(bBuff);
         } else {
           return null;
         }
       }
     }
 
-    return strs;
+    return strings;
   }
 
 }

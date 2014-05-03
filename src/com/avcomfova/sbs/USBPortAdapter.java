@@ -27,10 +27,10 @@ package com.avcomfova.sbs;
 
 import java.util.ArrayList;
 import java.util.List;
-import javax.usb.UsbDevice;
-import javax.usb.UsbException;
+import javax.usb.IUsbDevice;
 import javax.usb.UsbHostManager;
-import javax.usb.UsbHub;
+import javax.usb.exception.UsbException;
+import org.usb4java.javax.UsbHub;
 
 /**
  * Communications adapter implementation for USB serial ports.
@@ -42,20 +42,20 @@ public class USBPortAdapter {
   /**
    * A list of USB devices having the configured USB vendor and product id.
    */
-  private final List<UsbDevice> usbDeviceList;
+  private final List<IUsbDevice> iUsbDeviceList;
 
   /**
    * Construct a new USB Port Adapter. This constructor searches the USB tree to
    * find one or more devices having the provided USB vendor and product id.
-   * Found devices devices are placed within the list usbDeviceList.
+   * Found devices devices are placed within the list iUsbDeviceList.
    * <p>
    * @param usbVendorId  the USB vendor ID to search for
    * @param usbProductId the USB product ID to search for
-   * @throws javax.usb.UsbException if the running user has insufficient
-   *                                privileges to access the UDB tree
+   * @throws UsbException if the running user has insufficient privileges to
+   *                      access the UDB tree
    */
   public USBPortAdapter(short usbVendorId, short usbProductId) throws UsbException {
-    this.usbDeviceList = buildUSBDeviceList(UsbHostManager.getUsbServices().getRootUsbHub(), usbVendorId, usbProductId);
+    this.iUsbDeviceList = buildIUsbDeviceList(UsbHostManager.getUsbServices().getRootUsbHub(), usbVendorId, usbProductId);
   }
 
   /**
@@ -64,20 +64,20 @@ public class USBPortAdapter {
    * <p>
    * @return a non-null but possibly empty ArrayList instance.
    */
-  public List<UsbDevice> getUsbDeviceList() {
-    return usbDeviceList == null ? new ArrayList<UsbDevice>() : new ArrayList<>(usbDeviceList);
+  public List<IUsbDevice> getIUsbDeviceList() {
+    return iUsbDeviceList == null ? new ArrayList<IUsbDevice>() : new ArrayList<>(iUsbDeviceList);
   }
 
   /**
    * Get a List of all devices that match the specified vendor and product id.
    * <p>
-   * @param usbDevice The UsbDevice to check.
-   * @param vendorId  The vendor id to match.
-   * @param productId The product id to match.
-   * @param A         List of any matching UsbDevice(s).
+   * @param iUsbDevice The IUsbDevice to check.
+   * @param vendorId   The vendor id to match.
+   * @param productId  The product id to match.
+   * @param A          List of any matching IUsbDevice(s).
    */
-  private List<UsbDevice> buildUSBDeviceList(UsbDevice usbDevice, short vendorId, short productId) {
-    List<UsbDevice> usbDeviceListTemp = new ArrayList<>();
+  private List<IUsbDevice> buildIUsbDeviceList(IUsbDevice iUsbDevice, short vendorId, short productId) {
+    List<IUsbDevice> iUsbDeviceListTemp = new ArrayList<>();
     /*
      * A device's descriptor is always available. All descriptor field names and
      * types match exactly what is in the USB specification. Note that Java does
@@ -97,40 +97,41 @@ public class USBPortAdapter {
      *
      * See javax.usb.util.UsbUtil.unsignedInt() for some more information.
      */
-    if (vendorId == usbDevice.getUsbDeviceDescriptor().idVendor()
-      && productId == usbDevice.getUsbDeviceDescriptor().idProduct()) {
-      usbDeviceListTemp.add(usbDevice);
+    if (vendorId == iUsbDevice.getUsbDeviceDescriptor().idVendor()
+      && productId == iUsbDevice.getUsbDeviceDescriptor().idProduct()) {
+      iUsbDeviceListTemp.add(iUsbDevice);
     }
     /*
      * If the device is a HUB then recurse and scan the hub connected devices.
      * This is just normal recursion: Nothing special.
      */
-    if (usbDevice.isUsbHub()) {
-      for (Object object : ((UsbHub) usbDevice).getAttachedUsbDevices()) {
-        usbDeviceListTemp.addAll(buildUSBDeviceList((UsbDevice) object, vendorId, productId));
+    if (iUsbDevice.isUsbHub()) {
+      for (Object object : ((UsbHub) iUsbDevice).getAttachedUsbDevices()) {
+        iUsbDeviceListTemp.addAll(buildIUsbDeviceList((IUsbDevice) object, vendorId, productId));
       }
     }
-    return usbDeviceListTemp;
+    return iUsbDeviceListTemp;
   }
 
   /**
-   * This forms an inclusive list of all UsbDevices connected to this UsbDevice.
+   * This forms an inclusive list of all IUsbDevices connected to this
+   * IUsbDevice.
    * <p>
    * The list includes the provided device. If the device is also a hub, the
    * list will include all devices connected to it, recursively.
    * <p>
-   * @param usbDevice The UsbDevice to use.
-   * @return An inclusive List of all connected UsbDevices.
+   * @param iUsbDevice The IUsbDevice to use.
+   * @return An inclusive List of all connected IUsbDevices.
    */
-  public List<UsbDevice> getUSBDeviceList(UsbDevice usbDevice) {
-    List<UsbDevice> usbDeviceListTemp = new ArrayList<>();
-    usbDeviceListTemp.add(usbDevice);
-    if (usbDevice.isUsbHub()) {
-//      List<UsbDevice> attachedDevices = ((UsbHub) usbDevice).getAttachedUsbDevices();
-      for (Object attachedDevice : ((UsbHub) usbDevice).getAttachedUsbDevices()) {
-        usbDeviceListTemp.addAll(getUSBDeviceList((UsbDevice) attachedDevice));
+  public List<IUsbDevice> getIUsbDeviceList(IUsbDevice iUsbDevice) {
+    List<IUsbDevice> iUsbDeviceListTemp = new ArrayList<>();
+    iUsbDeviceListTemp.add(iUsbDevice);
+    if (iUsbDevice.isUsbHub()) {
+//      List<IUsbDevice> attachedDevices = ((UsbHub) iUsbDevice).getAttachedIUsbDevices();
+      for (Object attachedDevice : ((UsbHub) iUsbDevice).getAttachedUsbDevices()) {
+        iUsbDeviceListTemp.addAll(getIUsbDeviceList((IUsbDevice) attachedDevice));
       }
     }
-    return usbDeviceListTemp;
+    return iUsbDeviceListTemp;
   }
 }

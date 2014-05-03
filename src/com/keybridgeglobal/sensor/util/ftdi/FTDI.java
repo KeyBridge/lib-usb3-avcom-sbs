@@ -28,7 +28,8 @@ package com.keybridgeglobal.sensor.util.ftdi;
 import java.util.ArrayList;
 import java.util.List;
 import javax.usb.*;
-import static javax.usb.UsbConst.*;
+import javax.usb.exception.UsbException;
+import javax.usb.ri.request.BMRequestType;
 
 /**
  * Library to talk to FTDI UART chips via the USB bus.
@@ -36,11 +37,13 @@ import static javax.usb.UsbConst.*;
  * This library is tuned to communicate with FT232R, FT2232 and FT232B chips
  * from Future Technology Devices International Ltd.
  * <p>
- * Routines in this class are rewritten in Java from the native "libftdi"
- * library originally written in C.
+ * Routines and BYTE value constant in this class are rewritten in Java from the
+ * native "libftdi" library originally written in C.
  * <p>
  * @see <a
  * href="https://github.com/legege/libftdi/blob/master/src/ftdi.c">ftdi.c</a>
+ * @see <a
+ * href="https://github.com/legege/libftdi/blob/master/src/ftdi.h">ftdi.c</a>
  * @author Jesse Caulfield <jesse@caulfield.org> April, 25, 2014
  */
 @SuppressWarnings("PublicInnerClass")
@@ -58,15 +61,37 @@ public class FTDI {
 
   // control request message types
   /**
-   * FTDI Control message request type for OUT port.
+   * FTDI vendor-specific USB device control message to WRITE a configuration
+   * parameter.
+   * <p>
+   * This is the <code>bmRequestType</code> bitmapped field that identifies the
+   * characteristics of a specific request.
    */
+  // D6...5: Type
+  public static final byte REQUESTTYPE_TYPE_MASK = (byte) 0x60;
+  public static final byte REQUESTTYPE_TYPE_VENDOR = (byte) 0x40;
+  public static final byte REQUESTTYPE_RECIPIENT_DEVICE = (byte) 0x00;
+  public static final byte REQUESTTYPE_DIRECTION_IN = (byte) 0x80;
+  public static final byte REQUESTTYPE_DIRECTION_OUT = (byte) 0x00;
+
   public static final byte FTDI_DEVICE_OUT_REQTYPE = (REQUESTTYPE_TYPE_VENDOR | REQUESTTYPE_RECIPIENT_DEVICE | REQUESTTYPE_DIRECTION_OUT);
-  /**
-   * FTDI Control message request type for IN port.
-   */
   public static final byte FTDI_DEVICE_IN_REQTYPE = (REQUESTTYPE_TYPE_VENDOR | REQUESTTYPE_RECIPIENT_DEVICE | REQUESTTYPE_DIRECTION_IN);
 
-  // control requests
+  public static final byte FTDI_USB_CONFIGURATION_WRITE = new BMRequestType(BMRequestType.EDirection.HOST_TO_DEVICE,
+                                                                            BMRequestType.EType.VENDOR,
+                                                                            BMRequestType.ERecipient.DEVICE).getByteCode();
+
+  /**
+   * FTDI vendor-specific USB device control message to READ a configuration
+   * parameter.
+   * <p>
+   * This is the <code>bmRequestType</code> bitmapped field that identifies the
+   * characteristics of a specific request.
+   */
+  public static final byte FTDI_USB_CONFIGURATION_READ = new BMRequestType(BMRequestType.EDirection.DEVICE_TO_HOST,
+                                                                           BMRequestType.EType.VENDOR,
+                                                                           BMRequestType.ERecipient.DEVICE).getByteCode();
+// control requests codes ----------------------------------------------------
   /**
    * Reset the port
    */
@@ -130,20 +155,20 @@ public class FTDI {
    * @return a non-null list of FTDI device; empty if none are found
    * @throws UsbException if the USB port cannot be read
    */
-  public static List<UsbDevice> findFTDIDevices() throws UsbException {
-    return getUSBDeviceList(UsbHostManager.getUsbServices().getRootUsbHub(), VENDOR_ID, PRODUCT_ID);
+  public static List<IUsbDevice> findFTDIDevices() throws UsbException {
+    return getIUsbDeviceList(UsbHostManager.getUsbServices().getRootUsbHub(), VENDOR_ID, PRODUCT_ID);
   }
 
   /**
    * Get a List of all devices that match the specified vendor and product id.
    * <p>
-   * @param usbDevice The UsbDevice to check.
+   * @param usbDevice The IUsbDevice to check.
    * @param vendorId  The vendor id to match.
    * @param productId The product id to match.
-   * @param A         List of any matching UsbDevice(s).
+   * @param A         List of any matching IUsbDevice(s).
    */
-  private static List<UsbDevice> getUSBDeviceList(UsbDevice usbDevice, short vendorId, short productId) {
-    List<UsbDevice> usbDeviceList = new ArrayList<>();
+  private static List<IUsbDevice> getIUsbDeviceList(IUsbDevice usbDevice, short vendorId, short productId) {
+    List<IUsbDevice> iUsbDeviceList = new ArrayList<>();
     /*
      * A device's descriptor is always available. All descriptor field names and
      * types match exactly what is in the USB specification. Note that Java does
@@ -165,18 +190,18 @@ public class FTDI {
      */
     if (vendorId == usbDevice.getUsbDeviceDescriptor().idVendor()
       && productId == usbDevice.getUsbDeviceDescriptor().idProduct()) {
-      usbDeviceList.add(usbDevice);
+      iUsbDeviceList.add(usbDevice);
     }
     /*
      * If the device is a HUB then recurse and scan the hub connected devices.
      * This is just normal recursion: Nothing special.
      */
     if (usbDevice.isUsbHub()) {
-      for (Object object : ((UsbHub) usbDevice).getAttachedUsbDevices()) {
-        usbDeviceList.addAll(getUSBDeviceList((UsbDevice) object, vendorId, productId));
+      for (IUsbDevice usbDeviceTemp : ((IUsbHub) usbDevice).getAttachedUsbDevices()) {
+        iUsbDeviceList.addAll(getIUsbDeviceList(usbDeviceTemp, vendorId, productId));
       }
     }
-    return usbDeviceList;
+    return iUsbDeviceList;
   }
 
   /**
@@ -189,8 +214,8 @@ public class FTDI {
    *                          115200.
    * @throws UsbException if the baud rate cannot be set
    */
-  public static void setBaudRate(UsbDevice usbDevice, int requestedBaudRate) throws UsbException {
-    usbDevice.syncSubmit(usbDevice.createUsbControlIrp(FTDI_DEVICE_OUT_REQTYPE,
+  public static void setBaudRate(IUsbDevice usbDevice, int requestedBaudRate) throws UsbException {
+    usbDevice.syncSubmit(usbDevice.createUsbControlIrp(FTDI_USB_CONFIGURATION_WRITE,
                                                        SIO_SET_BAUDRATE_REQUEST,
                                                        calculateBaudRate(requestedBaudRate),
                                                        (short) 0));
@@ -203,8 +228,8 @@ public class FTDI {
    * @param state     TRUE to set high, FALSE to set low.
    * @throws UsbException if the device command message fails to set
    */
-  public static void setDTR(UsbDevice usbDevice, boolean state) throws UsbException {
-    usbDevice.syncSubmit(usbDevice.createUsbControlIrp(FTDI_DEVICE_OUT_REQTYPE,
+  public static void setDTR(IUsbDevice usbDevice, boolean state) throws UsbException {
+    usbDevice.syncSubmit(usbDevice.createUsbControlIrp(FTDI_USB_CONFIGURATION_WRITE,
                                                        SIO_SET_MODEM_CTRL_REQUEST,
                                                        state ? SIO_SET_DTR_HIGH : SIO_SET_DTR_LOW,
                                                        (short) 0));
@@ -217,8 +242,8 @@ public class FTDI {
    * @param state     TRUE to set high, FALSE to set low.
    * @throws UsbException if the device command message fails to set
    */
-  public static void setRTS(UsbDevice usbDevice, boolean state) throws UsbException {
-    usbDevice.syncSubmit(usbDevice.createUsbControlIrp(FTDI_DEVICE_OUT_REQTYPE,
+  public static void setRTS(IUsbDevice usbDevice, boolean state) throws UsbException {
+    usbDevice.syncSubmit(usbDevice.createUsbControlIrp(FTDI_USB_CONFIGURATION_WRITE,
                                                        SIO_SET_MODEM_CTRL_REQUEST,
                                                        state ? SIO_SET_RTS_HIGH : SIO_SET_RTS_LOW,
                                                        (short) 0));
@@ -232,11 +257,11 @@ public class FTDI {
    * @param rtsState  TRUE to set high, FALSE to set low.
    * @throws UsbException if the device command message fails to set
    */
-  public static void setDTRRTS(UsbDevice usbDevice, boolean dtrState, boolean rtsState) throws UsbException {
+  public static void setDTRRTS(IUsbDevice usbDevice, boolean dtrState, boolean rtsState) throws UsbException {
     short dtrValue = dtrState ? SIO_SET_DTR_HIGH : SIO_SET_DTR_LOW;
     short rtsValue = rtsState ? SIO_SET_RTS_HIGH : SIO_SET_RTS_LOW;
 
-    usbDevice.syncSubmit(usbDevice.createUsbControlIrp(FTDI_DEVICE_OUT_REQTYPE,
+    usbDevice.syncSubmit(usbDevice.createUsbControlIrp(FTDI_USB_CONFIGURATION_WRITE,
                                                        SIO_SET_MODEM_CTRL_REQUEST,
                                                        (short) (dtrValue | rtsValue),
                                                        (short) 0));
@@ -250,8 +275,8 @@ public class FTDI {
    *                    SIO_RTS_CTS_HS, SIO_DTR_DSR_HS or SIO_XON_XOFF_HS
    * @throws UsbException if the device command message fails to set
    */
-  public static void setFlowControl(UsbDevice usbDevice, byte flowcontrol) throws UsbException {
-    usbDevice.syncSubmit(usbDevice.createUsbControlIrp(FTDI_DEVICE_OUT_REQTYPE,
+  public static void setFlowControl(IUsbDevice usbDevice, byte flowcontrol) throws UsbException {
+    usbDevice.syncSubmit(usbDevice.createUsbControlIrp(FTDI_USB_CONFIGURATION_WRITE,
                                                        SIO_SET_FLOW_CTRL_REQUEST,
                                                        flowcontrol,
                                                        (short) 0));
@@ -267,7 +292,7 @@ public class FTDI {
    * @param parity    LineParity mode
    * @throws UsbException if the device command message fails to set
    */
-  public static void setLineProperty(UsbDevice usbDevice, LineDatabits bits, LineStopbits stopbits, LineParity parity) throws UsbException {
+  public static void setLineProperty(IUsbDevice usbDevice, LineDatabits bits, LineStopbits stopbits, LineParity parity) throws UsbException {
     setLineProperty(usbDevice, bits, stopbits, parity, LineBreak.BREAK_OFF);
   }
 
@@ -281,7 +306,7 @@ public class FTDI {
    * @param breaktype Break type (default is BREAK_OFF)
    * @throws UsbException if the device command message fails to set
    */
-  public static void setLineProperty(UsbDevice usbDevice, LineDatabits bits, LineStopbits stopbits, LineParity parity, LineBreak breaktype) throws UsbException {
+  public static void setLineProperty(IUsbDevice usbDevice, LineDatabits bits, LineStopbits stopbits, LineParity parity, LineBreak breaktype) throws UsbException {
     short value = (short) bits.getBits();
     switch (parity) {
       case NONE:
@@ -325,7 +350,7 @@ public class FTDI {
       default:
         throw new AssertionError(breaktype.name());
     }
-    usbDevice.syncSubmit(usbDevice.createUsbControlIrp(FTDI_DEVICE_OUT_REQTYPE,
+    usbDevice.syncSubmit(usbDevice.createUsbControlIrp(FTDI_USB_CONFIGURATION_WRITE,
                                                        SIO_SET_DATA_REQUEST,
                                                        value,
                                                        (short) 0));
@@ -494,15 +519,15 @@ public class FTDI {
   /**
    * Sets the chip baud rate.
    * <p>
-   * @param usbDevice the FTDI USB device
-   * @param baudrate  baud rate to set
+   * @param iUsbDevice the FTDI USB device
+   * @param baudrate   baud rate to set
    * @throws Exception if the command fails to set
    * @deprecated 04/28/14 this method does not set the correct baud rate divisor
    * value (it is always zero). this and supporting private calculator method
    * were translated from C but the original included an EEPROM query that is
    * not available from JAVA. Use setBaudRate() instead.
    */
-  public static void ftdi_set_baudrate(UsbDevice usbDevice, int baudrate) throws Exception {
+  public static void ftdi_set_baudrate(IUsbDevice iUsbDevice, int baudrate) throws Exception {
     short value = 0;
     short index = 0;
     int actual_baudrate;
@@ -529,10 +554,10 @@ public class FTDI {
       throw new Exception("Unsupported baudrate. Note: bitbang baudrates are automatically multiplied by 4");
     }
     //    device.syncSubmit(device.createUsbControlIrp(bmRequestType, SET_BAUDRATE_REQUEST, value, index));
-    usbDevice.syncSubmit(usbDevice.createUsbControlIrp(FTDI_DEVICE_OUT_REQTYPE,
-                                                       SIO_SET_BAUDRATE_REQUEST,
-                                                       value,
-                                                       index));
+    iUsbDevice.syncSubmit(iUsbDevice.createUsbControlIrp(FTDI_USB_CONFIGURATION_WRITE,
+                                                         SIO_SET_BAUDRATE_REQUEST,
+                                                         value,
+                                                         index));
   }
 
   /**
