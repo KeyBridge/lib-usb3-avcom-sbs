@@ -25,9 +25,11 @@
  */
 package org.caulfield.test;
 
-import com.avcomofva.sbs.datagram.write.HardwareDescriptionRequest;
 import java.util.List;
 import javax.usb.*;
+import javax.usb.exception.UsbDisconnectedException;
+import javax.usb.exception.UsbException;
+import javax.usb.exception.UsbNotActiveException;
 
 /**
  *
@@ -36,11 +38,10 @@ import javax.usb.*;
 public class Test_USBConnect {
 
   public static void main(String[] args) throws Exception {
-    UsbDevice usbDevice = null;
 
-    for (Object object : usbDevice.getUsbConfigurations()) {
-      UsbConfiguration config = (UsbConfiguration) object;
-      System.out.println("config " + config);
+    IUsbDevice iUsbDevice = null;
+    for (IUsbConfiguration iUsbConfiguration : iUsbDevice.getUsbConfigurations()) {
+      System.out.println("config " + iUsbConfiguration);
     }
 
     /**
@@ -50,79 +51,78 @@ public class Test_USBConnect {
      * interface then you have to claim it before using it and you have to
      * release it when you are finished. Example:
      */
-    UsbConfiguration configuration = usbDevice.getActiveUsbConfiguration();
-//    UsbConfiguration configuration = usbDevice.getUsbConfiguration((byte) 1);
+    IUsbConfiguration configuration = iUsbDevice.getActiveUsbConfiguration();
+//    UsbConfiguration configuration = iUsbDevice.getUsbConfiguration((byte) 1);
     System.out.println("active config " + configuration);
-    UsbInterface usbInterface = (UsbInterface) configuration.getUsbInterfaces().get(0);
-    System.out.println("usb interface " + usbInterface);
+    IUsbInterface iUsbInterface = (IUsbInterface) configuration.getUsbInterfaces().get(0);
+    System.out.println("usb interface " + iUsbInterface);
 
-//    UsbInterface usbInterface = configuration.getUsbInterface((byte) 0);
-//    for (Object object : configuration.getUsbInterfaces()) {
-//      usbInterface = (UsbInterface) object;
-//      System.out.println("usbInterface " + usbInterface);
+//    IUsbInterface iUsbInterface = configuration.getIUsbInterface((byte) 0);
+//    for (Object object : configuration.getIUsbInterfaces()) {
+//      iUsbInterface = (IUsbInterface) object;
+//      System.out.println("iUsbInterface " + iUsbInterface);
 //    }
-//    UsbInterface usbInterface = configuration.getUsbInterface((byte) 0x00);
-//    UsbInterface iface = configuration.getUsbInterface((byte) 1);
+//    IUsbInterface iUsbInterface = configuration.getIUsbInterface((byte) 0x00);
+//    IUsbInterface iface = configuration.getIUsbInterface((byte) 1);
     /**
      * It is possible that the interface you want to communicate with is already
      * used by a kernel driver. In this case you can try to force the claiming
      * by passing an interface policy to the claim method:
      */
-    if (usbInterface == null) {
+    if (iUsbInterface == null) {
       System.out.println("null usb interface");
       return;
     }
-    System.out.println("try to claim " + usbInterface);
+    System.out.println("try to claim " + iUsbInterface);
     try {
-      usbInterface.claim();
+      iUsbInterface.claim();
     } catch (UsbException | UsbNotActiveException | UsbDisconnectedException usbException) {
       System.err.println("FAIL to claim " + usbException.getMessage());
     }
 
-    List<UsbEndpoint> endpoints = usbInterface.getUsbEndpoints();
+    List<IUsbEndpoint> endpoints = iUsbInterface.getUsbEndpoints();
 
     // Ignore interface if it does not have two endpoints
     if (endpoints.size() != 2) {
       System.out.println("DEBUG does not have 2 endpoints ");
 //      continue;
     }
-
     // Ignore interface if it does not match the ADB specs
 //    if (!isAdbInterface(iface)) {      continue;    }
-    UsbEndpointDescriptor ed1 = endpoints.get(0).getUsbEndpointDescriptor();
-    UsbEndpointDescriptor ed2 = endpoints.get(1).getUsbEndpointDescriptor();
-    UsbEndpoint ep1 = endpoints.get(0);
+    IUsbEndpointDescriptor ed1 = endpoints.get(0).getUsbEndpointDescriptor();
+    IUsbEndpointDescriptor ed2 = endpoints.get(1).getUsbEndpointDescriptor();
+    IUsbEndpoint ep1 = endpoints.get(0);
 
     // Determine which endpoint is in and which is out. If both
     // endpoints are in or out then ignore the interface
-    byte a1 = ed1.bEndpointAddress();
-    byte a2 = ed2.bEndpointAddress();
-    byte in, out;
-    if (((a1 & UsbConst.ENDPOINT_DIRECTION_IN) != 0) && ((a2 & UsbConst.ENDPOINT_DIRECTION_IN) == 0)) {
-      in = a1;
-      out = a2;
-      System.out.println("debug in is a1 and out is a2");
-    } else if (((a2 & UsbConst.ENDPOINT_DIRECTION_IN) != 0) && ((a1 & UsbConst.ENDPOINT_DIRECTION_IN) == 0)) {
-      out = a1;
-      in = a2;
-      System.out.println("debug in is a2 and out is a1");
-    }
+//    byte a1 = ed1.bEndpointAddress();
+//    byte a2 = ed2.bEndpointAddress();
+//    byte in, out;
+//    if (((a1 & UsbConst.ENDPOINT_DIRECTION_IN) != 0) && ((a2 & UsbConst.ENDPOINT_DIRECTION_IN) == 0)) {
+//      in = a1;
+//      out = a2;
+//      System.out.println("debug in is a1 and out is a2");
+//    } else if (((a2 & UsbConst.ENDPOINT_DIRECTION_IN) != 0) && ((a1 & UsbConst.ENDPOINT_DIRECTION_IN) == 0)) {
+//      out = a1;
+//      in = a2;
+//      System.out.println("debug in is a2 and out is a1");
+//    }
+//
+//    UsbControlIrp irp = iUsbDevice.createUsbControlIrp((byte) (UsbConst.REQUESTTYPE_TYPE_CLASS | UsbConst.REQUESTTYPE_RECIPIENT_INTERFACE),
+//                                                       (byte) 0x09,
+//                                                       (short) 2,
+//                                                       (short) 1);
+//    irp.setData(new HardwareDescriptionRequest().serialize());
+//    iUsbDevice.syncSubmit(irp);
 
-    UsbControlIrp irp = usbDevice.createUsbControlIrp((byte) (UsbConst.REQUESTTYPE_TYPE_CLASS | UsbConst.REQUESTTYPE_RECIPIENT_INTERFACE),
-                                                      (byte) 0x09,
-                                                      (short) 2,
-                                                      (short) 1);
-    irp.setData(new HardwareDescriptionRequest().serialize());
-    usbDevice.syncSubmit(irp);
-
-//    usbInterface.claim(new UsbInterfacePolicy() {
+//    iUsbInterface.claim(new IUsbInterfacePolicy() {
 //
 //      @Override
-//      public boolean forceClaim(UsbInterface usbInterface) {
+//      public boolean forceClaim(IUsbInterface iUsbInterface) {
 //        return true;
 //      }
 //    });
-//    for (Object object : usbInterface.getUsbEndpoints()) {
+//    for (Object object : iUsbInterface.getUsbEndpoints()) {
 //      UsbEndpoint usbEndpoint = (UsbEndpoint) object;
 //      System.out.println("endpoint type " + usbEndpoint.getType() + " direction " + usbEndpoint.getDirection() + " " + usbEndpoint.getUsbEndpointDescriptor());
 //
@@ -130,9 +130,9 @@ public class Test_USBConnect {
 //
 //    }
 //    iface.claim();
-//    iface.claim(new UsbInterfacePolicy() {
+//    iface.claim(new IUsbInterfacePolicy() {
 //      @Override
-//      public boolean forceClaim(UsbInterface usbInterface) {
+//      public boolean forceClaim(IUsbInterface iUsbInterface) {
 //        return true;
 //      }
 //    });

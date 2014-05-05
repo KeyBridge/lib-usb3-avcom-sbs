@@ -25,9 +25,14 @@
  */
 package org.caulfield.test;
 
+import com.keybridgeglobal.sensor.util.ByteUtil;
+import com.keybridgeglobal.sensor.util.ftdi.FTDI;
 import java.util.ArrayList;
 import java.util.List;
 import javax.usb.*;
+import javax.usb.exception.UsbException;
+import static javax.usb.ri.enumerated.EEndpointDirection.HOST_TO_DEVICE;
+import javax.usb.ri.request.BMRequestType;
 
 /**
  *
@@ -39,13 +44,23 @@ public class Test_FTDI {
   private static final short productId = 0x6001;
 
   public static void main(String[] args) throws Exception {
-//    Test_FTDI test = new Test_FTDI();
-//    UsbDevice device = test.findAvcomUsbDevice();
+    Test_FTDI test = new Test_FTDI();
+    IUsbDevice device = test.findAvcomIUsbDevice();
+
+    System.out.println(ByteUtil.toStringFormatted(FTDI.FTDI_DEVICE_OUT_REQTYPE));
+
+    System.out.println(ByteUtil.toStringFormatted(FTDI.FTDI_USB_CONFIGURATION_WRITE));
+
+    System.out.println("HOST_TO_DEVICE \n" + ByteUtil.toStringFormatted(HOST_TO_DEVICE.getByteCode()));
+    System.out.println("VENDOR         \n" + ByteUtil.toStringFormatted(BMRequestType.EType.VENDOR.getByteCode()));
+    System.out.println("DEVICE         \n" + ByteUtil.toStringFormatted(BMRequestType.ERecipient.DEVICE.getByteCode()));
+
+    System.out.println("device " + device);
 
 //    FTDI ftdi = new FTDI();
-//    ftdi.setBaudRate(115200);
+    FTDI.setBaudRate(device, 115200);
+    FTDI.setDTR(device, false);
 //    ftdi.setDtr(false);
-
   }
 
   /**
@@ -55,24 +70,24 @@ public class Test_FTDI {
    * @return the first detected Avcom sensor device, null if none are found
    * @throws UsbException if the USB port cannot be read
    */
-  public UsbDevice findAvcomUsbDevice() throws UsbException {
-    UsbServices usbServices = UsbHostManager.getUsbServices();
-    UsbHub virtualRootUsbHub = usbServices.getRootUsbHub();
-    List<UsbDevice> usbDevices = getUSBDeviceList(virtualRootUsbHub, vendorId, productId);
+  public IUsbDevice findAvcomIUsbDevice() throws UsbException {
+    IUsbServices usbServices = UsbHostManager.getUsbServices();
+    IUsbHub virtualRootUsbHub = usbServices.getRootUsbHub();
+    List<IUsbDevice> iUsbDevices = getIUsbDeviceList(virtualRootUsbHub, vendorId, productId);
 
-    return usbDevices.isEmpty() ? null : usbDevices.get(0);
+    return iUsbDevices.isEmpty() ? null : iUsbDevices.get(0);
   }
 
   /**
    * Get a List of all devices that match the specified vendor and product id.
    * <p>
-   * @param usbDevice The UsbDevice to check.
-   * @param vendorId  The vendor id to match.
-   * @param productId The product id to match.
-   * @param A         List of any matching UsbDevice(s).
+   * @param iUsbDevice The IUsbDevice to check.
+   * @param vendorId   The vendor id to match.
+   * @param productId  The product id to match.
+   * @param A          List of any matching IUsbDevice(s).
    */
-  private List<UsbDevice> getUSBDeviceList(UsbDevice usbDevice, short vendorId, short productId) {
-    List<UsbDevice> usbDeviceList = new ArrayList<>();
+  private List<IUsbDevice> getIUsbDeviceList(IUsbDevice iUsbDevice, short vendorId, short productId) {
+    List<IUsbDevice> iUsbDeviceList = new ArrayList<>();
     /*
      * A device's descriptor is always available. All descriptor field names and
      * types match exactly what is in the USB specification. Note that Java does
@@ -92,20 +107,21 @@ public class Test_FTDI {
      *
      * See javax.usb.util.UsbUtil.unsignedInt() for some more information.
      */
-    if (vendorId == usbDevice.getUsbDeviceDescriptor().idVendor()
-      && productId == usbDevice.getUsbDeviceDescriptor().idProduct()) {
-      usbDeviceList.add(usbDevice);
+    if (vendorId == iUsbDevice.getUsbDeviceDescriptor().idVendor()
+      && productId == iUsbDevice.getUsbDeviceDescriptor().idProduct()) {
+      iUsbDeviceList.add(iUsbDevice);
     }
     /*
      * If the device is a HUB then recurse and scan the hub connected devices.
      * This is just normal recursion: Nothing special.
      */
-    if (usbDevice.isUsbHub()) {
-      for (Object object : ((UsbHub) usbDevice).getAttachedUsbDevices()) {
-        usbDeviceList.addAll(getUSBDeviceList((UsbDevice) object, vendorId, productId));
+    if (iUsbDevice.isUsbHub()) {
+
+      for (Object object : ((IUsbHub) iUsbDevice).getAttachedUsbDevices()) {
+        iUsbDeviceList.addAll(getIUsbDeviceList((IUsbDevice) object, vendorId, productId));
       }
     }
-    return usbDeviceList;
+    return iUsbDeviceList;
   }
 
 }
