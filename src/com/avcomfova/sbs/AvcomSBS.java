@@ -188,13 +188,11 @@ public class AvcomSBS implements Runnable {
      * Connect to the USB device.
      */
     connectUSB();
-    System.out.println("DEBUG AvcomSBS connectUSB OK ");
     /**
      * Initialize the device. This sends a few HardwareDescriptionRequests and
      * attempts to populate the internal HardwareDescriptionResponse field.
      */
     initialize();
-    System.out.println("DEBUG AvcomSBS initialize OK ");
     /**
      * Add a shutdown hook to disconnect and close the USB port when we're
      * shutting down.
@@ -257,7 +255,7 @@ public class AvcomSBS implements Runnable {
      * </pre>
      */
     if (settingsRequest.getSpanMHz() > TraceResponse.TRACE_DATA_LENGTH * settingsRequest.getResolutionBandwidth().getMHz()) {
-      System.out.println("DEBUG setSettings must be split into multiples " + settingsRequest);
+//      System.out.println("DEBUG setSettings must be split into multiples " + settingsRequest);
       /**
        * The request requires more data points than a single Trace can carry.
        */
@@ -265,9 +263,7 @@ public class AvcomSBS implements Runnable {
       double stopMHz = settingsRequest.getCenterFrequencyMHz() + settingsRequest.getSpanMHz() / 2;
       double sampleSpanMHz = TraceResponse.TRACE_DATA_LENGTH * settingsRequest.getResolutionBandwidth().getMHz();
       int numSettings = (int) (settingsRequest.getSpanMHz() / sampleSpanMHz) + 1;
-
-      System.out.println("DEBUG setSettings start/stop " + startMHz + " / " + stopMHz + " samplespan " + sampleSpanMHz + " numSettings " + numSettings);
-
+//      System.out.println("DEBUG setSettings start/stop " + startMHz + " / " + stopMHz + " samplespan " + sampleSpanMHz + " numSettings " + numSettings);
       for (int iterator = 0; iterator < numSettings; iterator++) {
         /**
          * The iterator center frequency cf_i in MHz.
@@ -280,9 +276,6 @@ public class AvcomSBS implements Runnable {
         SettingsRequest sr = settingsRequest.copy();
         sr.setCenterFrequencyMHz(cfiMHz); // new center frequency
         sr.setSpanMHz(sampleSpanMHz); // new span
-
-        System.out.println("  DEBUG " + iterator + " " + sr);
-
         /**
          * Add each new SettingsRequest to the queue, sorted by centerFrequency.
          */
@@ -301,7 +294,7 @@ public class AvcomSBS implements Runnable {
           double newcf = span / 2d + hardwareDescription.getProductId().getMinFrequency();
           sr.setCenterFrequencyMHz(newcf);
           sr.setSpanMHz(span);
-          System.out.println("  low: adjusted to " + sr);
+//          System.out.println("  low: adjusted to " + sr);
           synchronized (settingsRequestQueue) {
             settingsRequestQueue.put(newcf, sr);
           }
@@ -315,12 +308,12 @@ public class AvcomSBS implements Runnable {
           double newcf = span / 2d + sr.getStartFrequencyMHz();
           sr.setCenterFrequencyMHz(newcf);
           sr.setSpanMHz(span);
-          System.out.println("high: adjusted to " + sr);
+//          System.out.println("high: adjusted to " + sr);
           synchronized (settingsRequestQueue) {
             settingsRequestQueue.put(newcf, sr);
           }
         } else {
-          System.out.println("settings are out of bounds. discard " + sr);
+//          System.out.println("settings are out of bounds. discard " + sr);
         }
       } // end for numsamples
     } else {
@@ -516,17 +509,11 @@ public class AvcomSBS implements Runnable {
      * analyzer as we don't know what we're attached to.
      */
     for (int i = 0; i < 5; i++) {
-//    for (int i = 0; i < 2; i++) {
-      System.out.println("DEBUG AvcomSBS initialize write " + i);
       write(new HardwareDescriptionRequest());
-      System.out.println("DEBUG AvcomSBS initialize write " + i + " OK");
-
-      System.out.println("DEBUG AvcomSBS initialize read " + i);
       IDatagram datagram = read();
-      System.out.println("DEBUG AvcomSBS initialize read " + i + " OK " + datagram);
       if (datagram instanceof HardwareDescriptionResponse) {
         hardwareDescription = (HardwareDescriptionResponse) datagram;
-        System.out.println("DEBUG AvcomSBS device initialized " + hardwareDescription);
+//        System.out.println("DEBUG AvcomSBS device initialized " + hardwareDescription);
         break; // bread out of the FOR loop if hardware description received.
       }
       /**
@@ -534,7 +521,7 @@ public class AvcomSBS implements Runnable {
        * then wait one second a try again.
        */
       try {
-        System.out.println("AvcomSBS device initialization try " + (i + 1) + ".");
+        System.err.println("AvcomSBS device initialization try " + (i + 1) + ".");
         Thread.sleep(1000);
       } catch (InterruptedException ex) {
         Logger.getLogger(AvcomSBS.class.getName()).log(Level.SEVERE, null, ex);
@@ -566,7 +553,7 @@ public class AvcomSBS implements Runnable {
    * @throws Exception    if the Avcom data cannot be parsed into a valid
    *                      datagram instance
    */
-  @SuppressWarnings("NestedAssignment")
+  @SuppressWarnings({"NestedAssignment", "ValueOfIncrementOrDecrementUsed"})
   private IDatagram read() throws Exception {
     /**
      * Open the USB READ pipe if it is not yet opened.
@@ -633,15 +620,18 @@ public class AvcomSBS implements Runnable {
     int bytesRead;
     int readLoop = 0;
     while ((bytesRead = usbPipeRead.syncSubmit(usbPacket)) > 2) {
-      System.out.println("    READ [" + bytesRead + "] " + ByteUtil.toString(usbPacket));
+//      System.out.println("    READ [" + bytesRead + "] " + ByteUtil.toString(usbPacket));
       /**
        * Developer note: There is a race condition with the FTDI chip where it
-       * will produce infinite zeros if the settings are not configured
-       * properly. If no AvcomDatagram is initialized after 10 USB Packets then
-       * there is probably a line protocol error. (10 is an arbitrary number,
-       * but the Avcom device typically initializes an Avcom Datagram on the
-       * first USB packet returned.) Avoid the race condition by breaking out of
-       * the WHILE READ loop.
+       * will produce infinite zeros if the settings are not configured properly
+       * or if you try to read data from a USB write port.
+       * <p>
+       * If no AvcomDatagram is initialized after 10 USB Packets then there is
+       * probably an error in your implementation and/or port selection. (10 is
+       * an arbitrary number, but the Avcom device typically initializes an
+       * Avcom Datagram on the first USB packet returned; the second if there is
+       * old data in the out buffer.) Avoid the race condition by breaking out
+       * of the WHILE READ loop.
        */
       if (avcomDatagram == null && readLoop++ > 10) {
         break;
@@ -779,7 +769,6 @@ public class AvcomSBS implements Runnable {
     /**
      * The direct method.
      */
-    System.out.println("DEBUG    WRITE [" + datagram.serialize().length + "] " + ByteUtil.toString(datagram.serialize()));
     usbPipeWrite.syncSubmit(datagram.serialize());
 //    System.out.println("DEBUG    WRITE [" + datagram.serialize().length + "] " + ByteUtil.toString(datagram.serialize()));
 

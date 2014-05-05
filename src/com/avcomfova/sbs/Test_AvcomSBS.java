@@ -29,7 +29,6 @@ import com.avcomfova.sbs.datagram.IDatagram;
 import com.avcomofva.sbs.datagram.write.SettingsRequest;
 import com.avcomofva.sbs.enumerated.EAvcomReferenceLevel;
 import com.avcomofva.sbs.enumerated.EAvcomResolutionBandwidth;
-import com.keybridgeglobal.sensor.util.ByteUtil;
 import com.keybridgeglobal.sensor.util.ftdi.FTDI;
 import java.util.ArrayList;
 import java.util.List;
@@ -48,10 +47,6 @@ public class Test_AvcomSBS implements IDatagramListener {
 
   public static void main(String[] args) throws UsbException, Exception {
     System.out.println("DEBUG Test_AvcomSBS");
-
-    System.out.println("DEBUG FTDI_USB_CONFIGURATION_WRITE ");
-
-    ByteUtil.toString(FTDI.FTDI_USB_CONFIGURATION_WRITE);
 
     Test_AvcomSBS test = new Test_AvcomSBS();
 
