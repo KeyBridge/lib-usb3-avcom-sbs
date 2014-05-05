@@ -426,10 +426,12 @@ public class AvcomSBS implements Runnable {
      */
     FTDI.setBaudRate(usbDevice, 115200);
     FTDI.setDTRRTS(usbDevice, false, true);
-    FTDI.setLineProperty(usbDevice, FTDI.LineDatabits.BITS_8,
+    FTDI.setLineProperty(usbDevice,
+                         FTDI.LineDatabits.BITS_8,
                          FTDI.LineStopbits.STOP_BIT_1,
                          FTDI.LineParity.NONE);
     FTDI.setFlowControl(usbDevice, FTDI.SIO_DISABLE_FLOW_CTRL);
+
     /**
      * Scan the interface UsbEndPoint list to set the READ and WRITE IUsbPipe.
      */
@@ -513,7 +515,8 @@ public class AvcomSBS implements Runnable {
      * bad things happen later when trying to take data from the spectrum
      * analyzer as we don't know what we're attached to.
      */
-    for (int i = 0; i < 5; i++) {
+//    for (int i = 0; i < 5; i++) {
+    for (int i = 0; i < 2; i++) {
       System.out.println("DEBUG AvcomSBS initialize write " + i);
       write(new HardwareDescriptionRequest());
       System.out.println("DEBUG AvcomSBS initialize write " + i + " OK");
@@ -524,7 +527,7 @@ public class AvcomSBS implements Runnable {
       if (datagram instanceof HardwareDescriptionResponse) {
         hardwareDescription = (HardwareDescriptionResponse) datagram;
         System.out.println("DEBUG AvcomSBS device initialized " + hardwareDescription);
-        break; // bread out of the FOR loop.
+        break; // bread out of the FOR loop if hardware description received.
       }
       /**
        * If no HardwareDescriptionResponse datagram was read from the USB port
@@ -776,7 +779,10 @@ public class AvcomSBS implements Runnable {
     /**
      * The direct method.
      */
+    System.out.println("DEBUG    WRITE [" + datagram.serialize().length + "] " + ByteUtil.toString(datagram.serialize()));
     usbPipeWrite.syncSubmit(datagram.serialize());
+//    System.out.println("DEBUG    WRITE [" + datagram.serialize().length + "] " + ByteUtil.toString(datagram.serialize()));
+
     /**
      * Developer note: Important: Wait a bit for the datagram to be processed
      * (especially new settings) to take effect. Avcom devices need about 2 to 5

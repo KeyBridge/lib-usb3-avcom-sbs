@@ -260,7 +260,6 @@ public class FTDI {
   public static void setDTRRTS(IUsbDevice usbDevice, boolean dtrState, boolean rtsState) throws UsbException {
     short dtrValue = dtrState ? SIO_SET_DTR_HIGH : SIO_SET_DTR_LOW;
     short rtsValue = rtsState ? SIO_SET_RTS_HIGH : SIO_SET_RTS_LOW;
-
     usbDevice.syncSubmit(usbDevice.createUsbControlIrp(FTDI_USB_CONFIGURATION_WRITE,
                                                        SIO_SET_MODEM_CTRL_REQUEST,
                                                        (short) (dtrValue | rtsValue),
@@ -429,12 +428,12 @@ public class FTDI {
   /**
    * FTDI chip type
    */
-  public enum FtdiChipType {
+  public enum ChipType {
 
     TYPE_AM(0), TYPE_BM(1), TYPE_2232C(2), TYPE_R(3), TYPE_2232H(4), TYPE_4232H(5), TYPE_232H(6);
     private final int chipType;
 
-    private FtdiChipType(int chipType) {
+    private ChipType(int chipType) {
       this.chipType = chipType;
     }
 
@@ -517,15 +516,16 @@ public class FTDI {
 
   //<editor-fold defaultstate="collapsed" desc="Deprecated Native Translations">
   /**
-   * Sets the chip baud rate.
+   * Sets the chip baud rate. Method copied directly from "ftdi.c"
    * <p>
    * @param iUsbDevice the FTDI USB device
    * @param baudrate   baud rate to set
    * @throws Exception if the command fails to set
+   * <p>
    * @deprecated 04/28/14 this method does not set the correct baud rate divisor
    * value (it is always zero). this and supporting private calculator method
    * were translated from C but the original included an EEPROM query that is
-   * not available from JAVA. Use setBaudRate() instead.
+   * not yet available from JAVA. Use setBaudRate() instead.
    */
   public static void ftdi_set_baudrate(IUsbDevice iUsbDevice, int baudrate) throws Exception {
     short value = 0;
@@ -576,9 +576,9 @@ public class FTDI {
     int H_CLK = 120000000; // 120 MHz clock
     int C_CLK = 48000000; // 48 MHz clock
 
-    FtdiChipType type = FtdiChipType.TYPE_2232H;
+    ChipType type = ChipType.TYPE_2232H;
 
-    if (type.equals(FtdiChipType.TYPE_2232H) || type.equals(FtdiChipType.TYPE_4232H) || type.equals(FtdiChipType.TYPE_232H)) {
+    if (type.equals(ChipType.TYPE_2232H) || type.equals(ChipType.TYPE_4232H) || type.equals(ChipType.TYPE_232H)) {
       if (baudrate * 10 > H_CLK / 0x3fff) {
         /*
          * On H Devices, use 12 000 000 Baudrate when possible. We have a 14 bit
@@ -595,7 +595,7 @@ public class FTDI {
       } else {
         best_baud = ftdi_to_clkbits(baudrate, C_CLK, 16, encoded_divisor);
       }
-    } else if (type.equals(FtdiChipType.TYPE_BM) || type.equals(FtdiChipType.TYPE_2232C) || type.equals(FtdiChipType.TYPE_R)) {
+    } else if (type.equals(ChipType.TYPE_BM) || type.equals(ChipType.TYPE_2232C) || type.equals(ChipType.TYPE_R)) {
       best_baud = ftdi_to_clkbits(baudrate, C_CLK, 16, encoded_divisor);
     } else {
       best_baud = ftdi_to_clkbits_AM(baudrate, encoded_divisor);
@@ -603,7 +603,7 @@ public class FTDI {
     // Split into "value" and "index" values
     value = (short) (encoded_divisor & 0xFFFF);
     System.out.println("debug ftdi_convert_baudrate encoded_divisor " + encoded_divisor + " value " + value);
-    if (type.equals(FtdiChipType.TYPE_2232H) || type.equals(FtdiChipType.TYPE_4232H) || type.equals(FtdiChipType.TYPE_232H)) {
+    if (type.equals(ChipType.TYPE_2232H) || type.equals(ChipType.TYPE_4232H) || type.equals(ChipType.TYPE_232H)) {
       index = (short) (encoded_divisor >> 8);
       index &= 0xFF00;
 //      index |= ftdi -> index;

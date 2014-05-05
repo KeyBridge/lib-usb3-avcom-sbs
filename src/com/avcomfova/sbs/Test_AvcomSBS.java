@@ -23,10 +23,8 @@
  * ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
  * POSSIBILITY OF SUCH DAMAGE.
  */
-package org.caulfield.test;
+package com.avcomfova.sbs;
 
-import com.avcomfova.sbs.AvcomSBS;
-import com.avcomfova.sbs.IDatagramListener;
 import com.avcomfova.sbs.datagram.IDatagram;
 import com.avcomofva.sbs.datagram.write.SettingsRequest;
 import com.avcomofva.sbs.enumerated.EAvcomReferenceLevel;
