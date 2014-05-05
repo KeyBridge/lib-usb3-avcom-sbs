@@ -29,6 +29,7 @@ import java.util.ArrayList;
 import java.util.List;
 import javax.usb.*;
 import javax.usb.exception.UsbException;
+import javax.usb.ri.enumerated.EEndpointDirection;
 import javax.usb.ri.request.BMRequestType;
 
 /**
@@ -77,7 +78,7 @@ public class FTDI {
   public static final byte FTDI_DEVICE_OUT_REQTYPE = (REQUESTTYPE_TYPE_VENDOR | REQUESTTYPE_RECIPIENT_DEVICE | REQUESTTYPE_DIRECTION_OUT);
   public static final byte FTDI_DEVICE_IN_REQTYPE = (REQUESTTYPE_TYPE_VENDOR | REQUESTTYPE_RECIPIENT_DEVICE | REQUESTTYPE_DIRECTION_IN);
 
-  public static final byte FTDI_USB_CONFIGURATION_WRITE = new BMRequestType(BMRequestType.EDirection.HOST_TO_DEVICE,
+  public static final byte FTDI_USB_CONFIGURATION_WRITE = new BMRequestType(EEndpointDirection.HOST_TO_DEVICE,
                                                                             BMRequestType.EType.VENDOR,
                                                                             BMRequestType.ERecipient.DEVICE).getByteCode();
 
@@ -88,7 +89,7 @@ public class FTDI {
    * This is the <code>bmRequestType</code> bitmapped field that identifies the
    * characteristics of a specific request.
    */
-  public static final byte FTDI_USB_CONFIGURATION_READ = new BMRequestType(BMRequestType.EDirection.DEVICE_TO_HOST,
+  public static final byte FTDI_USB_CONFIGURATION_READ = new BMRequestType(EEndpointDirection.DEVICE_TO_HOST,
                                                                            BMRequestType.EType.VENDOR,
                                                                            BMRequestType.ERecipient.DEVICE).getByteCode();
 // control requests codes ----------------------------------------------------

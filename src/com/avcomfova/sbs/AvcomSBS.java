@@ -454,7 +454,7 @@ public class AvcomSBS implements Runnable {
        * USBRQ_DIR_DEVICE_TO_HOST (1&lt;&lt;7) (integer -128). The negative
        * integer value is an artifact of bit shifting.
        */
-      if (EEndpointDirection.IN.equals(usbEndpoint.getDirection())) {
+      if (EEndpointDirection.HOST_TO_DEVICE.equals(usbEndpoint.getDirection())) {
         usbPipeWrite = usbEndpoint.getUsbPipe();
       } else {
         usbPipeRead = usbEndpoint.getUsbPipe();
@@ -515,8 +515,8 @@ public class AvcomSBS implements Runnable {
      * bad things happen later when trying to take data from the spectrum
      * analyzer as we don't know what we're attached to.
      */
-//    for (int i = 0; i < 5; i++) {
-    for (int i = 0; i < 2; i++) {
+    for (int i = 0; i < 5; i++) {
+//    for (int i = 0; i < 2; i++) {
       System.out.println("DEBUG AvcomSBS initialize write " + i);
       write(new HardwareDescriptionRequest());
       System.out.println("DEBUG AvcomSBS initialize write " + i + " OK");

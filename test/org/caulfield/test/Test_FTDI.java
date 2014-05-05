@@ -31,8 +31,8 @@ import java.util.ArrayList;
 import java.util.List;
 import javax.usb.*;
 import javax.usb.exception.UsbException;
+import static javax.usb.ri.enumerated.EEndpointDirection.HOST_TO_DEVICE;
 import javax.usb.ri.request.BMRequestType;
-import static javax.usb.ri.request.BMRequestType.EDirection.HOST_TO_DEVICE;
 
 /**
  *
