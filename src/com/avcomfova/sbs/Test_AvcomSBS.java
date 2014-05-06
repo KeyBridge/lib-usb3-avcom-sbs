@@ -29,9 +29,11 @@ import com.avcomfova.sbs.datagram.IDatagram;
 import com.avcomofva.sbs.datagram.write.SettingsRequest;
 import com.avcomofva.sbs.enumerated.EAvcomReferenceLevel;
 import com.avcomofva.sbs.enumerated.EAvcomResolutionBandwidth;
+import com.ftdichip.usb.FTDI;
 import com.ftdichip.usb.FTDIUtil;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Map;
 import javax.usb.*;
 import javax.usb.exception.UsbException;
 import org.usb4java.javax.UsbHub;
@@ -41,13 +43,13 @@ import org.usb4java.javax.UsbHub;
  * @author Jesse Caulfield <jesse@caulfield.org>
  */
 public class Test_AvcomSBS implements IDatagramListener {
-
+  
   private static final short vendorId = 0x0403;
   private static final short productId = 0x6001;
-
+  
   public static void main(String[] args) throws UsbException, Exception {
     System.out.println("DEBUG Test_AvcomSBS");
-
+    
     Test_AvcomSBS test = new Test_AvcomSBS();
 
 //    AvcomSBS avcom = new AvcomSBS();
@@ -57,28 +59,28 @@ public class Test_AvcomSBS implements IDatagramListener {
       System.out.println("No AvcomSBS devices attached. EXIT.");
       return;
     }
-
+    
     System.out.println("DEBUG Test_AvcomSBS " + iUsbDeviceList);
-
-    AvcomSBS avcom = new AvcomSBS(iUsbDeviceList.get(0));
+    
+    AvcomSBS avcom = new AvcomSBS(new FTDI(iUsbDeviceList.get(0)));
     avcom.addListener(test);
     avcom.setSettings(new SettingsRequest(1250, 2500, EAvcomReferenceLevel.MINUS_10, EAvcomResolutionBandwidth.ONE_MHZ));
 
 //    System.out.println("RUN");
 //    avcom.run();
     avcom.start();
-
+    
     Thread.sleep(15000);
-
+    
     avcom.setSettings(new SettingsRequest(500, 300, EAvcomReferenceLevel.MINUS_50, EAvcomResolutionBandwidth.ONE_MHZ));
     Thread.sleep(3000);
-
+    
     avcom.stop();
-//    Map<String, String> configuration = avcom.getConfiguration();
-//    System.out.println("Configuration -------------------");
-//    for (Map.Entry<String, String> entry : configuration.entrySet()) {
-//      System.out.println(entry.getKey() + " = " + entry.getValue());
-//    }
+    Map<String, String> configuration = avcom.getConfiguration();
+    System.out.println("Configuration -------------------");
+    for (Map.Entry<String, String> entry : configuration.entrySet()) {
+      System.out.println(entry.getKey() + " = " + entry.getValue());
+    }
 
     System.out.println("DEBUG Test_AvcomSBS DONE");
   }
@@ -94,10 +96,10 @@ public class Test_AvcomSBS implements IDatagramListener {
     IUsbServices usbServices = UsbHostManager.getUsbServices();
     IUsbHub virtualRootUsbHub = usbServices.getRootUsbHub();
     List<IUsbDevice> iUsbDevices = getIUsbDeviceList(virtualRootUsbHub, vendorId, productId);
-
+    
     return iUsbDevices.isEmpty() ? null : iUsbDevices.get(0);
   }
-
+  
   @Override
   public void onDatagram(IDatagram datagram) {
     System.out.println("DEBUG Test_Acvom onDatagram " + datagram.toString() + " elapsed time " + datagram.getElapsedTimeMillis());

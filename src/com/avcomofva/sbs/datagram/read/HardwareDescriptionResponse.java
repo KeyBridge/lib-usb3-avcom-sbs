@@ -162,6 +162,7 @@ public final class HardwareDescriptionResponse extends ADatagram {
    * fields with the byte array returned from the sensor.
    * <p>
    * @param bytes the byte array returned from the sensor
+   * @throws java.lang.Exception if the byte array fails to parse
    */
   public HardwareDescriptionResponse(byte[] bytes) throws Exception {
     super(EAvcomDatagram.HARDWARE_DESCRIPTION_RESPONSE);
@@ -259,9 +260,15 @@ public final class HardwareDescriptionResponse extends ADatagram {
   }
 
   /**
-   * Increment the datagram Error Count by one.
+   * Increment the datagram ERROR count by one.
    */
   public void setDatagramError() {
+    /**
+     * Reset the counter if it is approaching its limit.
+     */
+    if (this.datagramErrorCount > Long.MAX_VALUE - 100) {
+      this.datagramErrorCount = 0;
+    }
     this.datagramErrorCount += 1;
   }
 
@@ -270,9 +277,15 @@ public final class HardwareDescriptionResponse extends ADatagram {
   }
 
   /**
-   * Increment the datagram Read Count by one.
+   * Increment the datagram READ count by one.
    */
   public void setDatagramRead() {
+    /**
+     * Reset the counter if it is approaching its limit.
+     */
+    if (this.datagramReadCount > Long.MAX_VALUE - 100) {
+      this.datagramReadCount = 0;
+    }
     this.datagramReadCount += 1;
   }
 
@@ -281,9 +294,15 @@ public final class HardwareDescriptionResponse extends ADatagram {
   }
 
   /**
-   * Increment the datagram Write Count by one.
+   * Increment the datagram WRITE count by one.
    */
   public void setDatagramWrite() {
+    /**
+     * Reset the counter if it is approaching its limit.
+     */
+    if (this.datagramWriteCount > Long.MAX_VALUE - 100) {
+      this.datagramWriteCount = 0;
+    }
     this.datagramWriteCount += 1;
   }
 

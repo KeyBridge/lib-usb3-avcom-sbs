@@ -35,7 +35,8 @@ import com.avcomofva.sbs.datagram.write.HardwareDescriptionRequest;
 import com.avcomofva.sbs.datagram.write.SettingsRequest;
 import com.avcomofva.sbs.datagram.write.TraceRequest;
 import com.avcomofva.sbs.enumerated.EAvcomDatagram;
-import com.ftdichip.usb.FTDIUtil;
+import com.ftdichip.usb.FTDI;
+import static com.ftdichip.usb.FTDI.DEFAULT_BAUD_RATE;
 import com.ftdichip.usb.enumerated.EFlowControl;
 import com.ftdichip.usb.enumerated.ELineDatabits;
 import com.ftdichip.usb.enumerated.ELineParity;
@@ -51,11 +52,7 @@ import java.util.concurrent.ConcurrentMap;
 import java.util.concurrent.ConcurrentSkipListMap;
 import java.util.logging.Level;
 import java.util.logging.Logger;
-import javax.usb.*;
-import javax.usb.exception.UsbDisconnectedException;
 import javax.usb.exception.UsbException;
-import javax.usb.exception.UsbNotActiveException;
-import javax.usb.ri.enumerated.EEndpointDirection;
 
 /**
  * Sensor implementation supporting the Avcom SBS single-board-sensor platform.
@@ -85,40 +82,10 @@ import javax.usb.ri.enumerated.EEndpointDirection;
 public class AvcomSBS implements Runnable {
 
   /**
-   * 0403. The USB vendor ID (FTDI UART) used by Avcom devices.
+   * The USB Device to which this AvcomSBS device is attached. This is the FTDI
+   * serial I/O USB device through which the Avcom SBS sensor communicates.
    */
-  private static final short USB_VENDOR_ID = 0x0403;
-  /**
-   * 6001. The USB product ID (FTDI UART) used by Avcom devices.
-   */
-  private static final short USB_PRODUCT_ID = 0x6001;
-  /**
-   * A set of IDatagramListener instances. These will be notified when a new
-   * Avcom datagram is read from the device represented by this instance.
-   */
-  private final List<IDatagramListener> datagramListeners;
-
-  /**
-   * The USB Device to which this AvcomSBS device is attached.
-   */
-  private final IUsbDevice usbDevice;
-  /**
-   * The USB interface (within the IUsbDevice) through which this AvcomSBS
-   * device communicates. This is extracted from the IUsbDevice and stored here
-   * (at the class level) for convenience.
-   * <p>
-   * IUsbInterface a synchronous wrapper through which this application sends
-   * and receives messages with the device.
-   */
-  private IUsbInterface usbInterface;
-  /**
-   * The USB Pipe used to READ data from the connected device.
-   */
-  private IUsbPipe usbPipeRead;
-  /**
-   * The USB Pipe used to WRITE data from the connected device.
-   */
-  private IUsbPipe usbPipeWrite;
+  private final FTDI ftdi;
 
   /**
    * The hardware description response message provided by the attached Avcom
@@ -131,6 +98,12 @@ public class AvcomSBS implements Runnable {
    * operation of the sensor.
    */
   private SettingsRequest settingsRequest;
+
+  /**
+   * A set of IDatagramListener instances. These will be notified when a new
+   * Avcom datagram is read from the device represented by this instance.
+   */
+  private final List<IDatagramListener> datagramListeners;
 
   /**
    * Avcom devices return a maximum of 320 (for 8-bit) or 480 (for 12 bit) bytes
@@ -160,9 +133,9 @@ public class AvcomSBS implements Runnable {
   /**
    * Tread helper flag to indicate that new settings have been requested and any
    * current scans (especially a wide-band scan) should be immediately
-   * interrupted and the new settings should be used. As wideband scans can take
-   * some time (up to 15 or 20 seconds) this thread interrupt is important for a
-   * responsive user interface.
+   * interrupted and the new settings should be used. As wide-band scans can
+   * take some time (up to 15 or 20 seconds) this thread interrupt is important
+   * for a responsive user interface.
    */
   private boolean newSettings = false;
 
@@ -174,45 +147,26 @@ public class AvcomSBS implements Runnable {
    * hook to automatically disconnect from the USB port when the application
    * exits.
    * <p>
-   * @param iUsbDevice the USB Device to which this AvcomSBS device is attached.
+   * @param ftdi the FTDI serial I/O USB Device to which this AvcomSBS device is
+   *             attached.
    * @throws UsbException if the USB Device cannot be attached or claimed for
    *                      use
    */
-  public AvcomSBS(final IUsbDevice iUsbDevice) throws UsbException, Exception {
-    System.out.println("Opening AvcomSBS on USB " + iUsbDevice);
+  public AvcomSBS(final FTDI ftdi) throws UsbException, Exception {
+    System.out.println("Opening AvcomSBS on USB " + ftdi);
     /**
      * Set the USB Device.
      */
-    this.usbDevice = iUsbDevice;
+    this.ftdi = ftdi;
     /**
      * Initialize the Datagram listeners.
      */
     this.datagramListeners = new ArrayList<>();
     /**
-     * Connect to the USB device.
-     */
-    connectUSB();
-    /**
      * Initialize the device. This sends a few HardwareDescriptionRequests and
      * attempts to populate the internal HardwareDescriptionResponse field.
      */
     initialize();
-    /**
-     * Add a shutdown hook to disconnect and close the USB port when we're
-     * shutting down.
-     */
-    Runtime.getRuntime().addShutdownHook(new Thread() {
-
-      @Override
-      public void run() {
-        disconnectUSB();
-        try {
-          Thread.sleep(1000);
-        } catch (InterruptedException ex) {
-        }
-        System.out.println("Closed AvcomSBS on USB " + iUsbDevice);
-      }
-    });
   }
 
   /**
@@ -361,122 +315,6 @@ public class AvcomSBS implements Runnable {
   }
 
   /**
-   * Connect to the USB-attached sensor device.
-   * <p>
-   * @throws UsbException if the USB Device cannot be attached or claimed for
-   *                      use
-   */
-  private void connectUSB() throws UsbException, Exception {
-    /**
-     * Developer note: If communicating via serial port set DTP and RTS lines as
-     * DTR unasserted and RTS asserted. Send data at 115200 bits per seconds, 8
-     * data bits, no parity, 1 stop bit, no flow control.
-     * <p>
-     * USB Interfaces: When you want to communicate with an interface or with
-     * endpoints of this interface then you have to claim it before using it and
-     * you have to release it when you are finished. Example:
-     */
-    IUsbConfiguration configuration = usbDevice.getActiveUsbConfiguration();
-    /**
-     * Developer note: AvcomSBS devices have only ONE IUsbInterface (Interface
-     * #0). Therefore always get and use the first available IUsbInterface from
-     * the list.
-     * <p>
-     * The returned interface setting will be the current active alternate
-     * setting if this configuration (and thus the contained interface) is
-     * active. If this configuration is not active, the returned interface
-     * setting will be an implementation-dependent alternate setting.
-     */
-    IUsbInterface usbInterfaceTemp = configuration.getUsbInterfaces().get(0);
-    /**
-     * Claim this USB interface. This will attempt whatever claiming the native
-     * implementation provides, if any. If the interface is already claimed, or
-     * the native claim fails, this will fail. This must be done before opening
-     * and/or using any IUsbPipes.
-     * <p>
-     * Developer note: It is possible (nee likely) that the interface is already
-     * used by the ftdi_sio kernel driver and mapped to a TTY device file.
-     * Always force the claim by passing an interface policy to the claim
-     * method:
-     */
-    usbInterfaceTemp.claim(new IUsbInterfacePolicy() {
-
-      @Override
-      public boolean forceClaim(IUsbInterface usbInterface) {
-        return true;
-      }
-    });
-    /**
-     * If the interface was successfully claimed then assign it to the class
-     * field. This is referenced later for release when the application closes.
-     */
-    this.usbInterface = usbInterfaceTemp;
-    /**
-     * Set the FTDI serial port settings.
-     * <p>
-     * Set the serial port baud rate. '26' is the pre-calculated sub-integer
-     * divisor corresponding to a baud rate of 115,384 baud: the closest
-     * supported baud rate to Avcom's specified requirement of 115,200.
-     * <p>
-     * Set the serial port DTR to 'unasserted'.
-     */
-    FTDIUtil.setBaudRate(usbDevice, 115200);
-    FTDIUtil.setLineProperty(usbDevice,
-                             ELineDatabits.BITS_8,
-                             ELineStopbits.STOP_BIT_1,
-                             ELineParity.NONE);
-    FTDIUtil.setFlowControl(usbDevice, EFlowControl.DISABLE_FLOW_CTRL);
-    FTDIUtil.setDTRRTS(usbDevice, false, true);
-
-    /**
-     * Scan the interface UsbEndPoint list to set the READ and WRITE IUsbPipe.
-     */
-    for (IUsbEndpoint usbEndpoint : usbInterfaceTemp.getUsbEndpoints()) {
-      /**
-       * Developer Note: The USB direction value is the position 7 bit in the
-       * bmRequestType field returned by the native libusb library. If the bit
-       * is ZERO then the direction is host-to-device (WRITE).
-       * <p>
-       * Identify the READ/WRITE pipes by their end point address, which is read
-       * from the bmRequestType field in USB setup.
-       * <pre>
-       * d t t r r r r r, where
-       * d ..... direction: 0=host->device, 1=device->host
-       * t ..... type: 0=standard, 1=class, 2=vendor, 3=reserved
-       * r ..... recipient: 0=device, 1=interface, 2=endpoint, 3=other
-       * </pre> The UsbConst values reflect the bit shifted mask from the
-       * bmRequestType byte: USBRQ_DIR_MASK 0x80 (integer 128),
-       * USBRQ_DIR_HOST_TO_DEVICE (0&lt;&lt;7) (integer zero)
-       * USBRQ_DIR_DEVICE_TO_HOST (1&lt;&lt;7) (integer -128). The negative
-       * integer value is an artifact of bit shifting.
-       */
-      if (EEndpointDirection.HOST_TO_DEVICE.equals(usbEndpoint.getDirection())) {
-        usbPipeWrite = usbEndpoint.getUsbPipe();
-      } else {
-        usbPipeRead = usbEndpoint.getUsbPipe();
-      }
-    }
-  }
-
-  /**
-   * Release this interface.
-   * <p>
-   * This will only succeed if the interface has been properly claimed. If the
-   * native release fails, this will fail. This should be done after the
-   * interface is no longer being used. All pipes must be closed before this can
-   * be released.
-   */
-  public void disconnectUSB() {
-    if (this.usbInterface != null) {
-      try {
-        usbInterface.release();
-      } catch (UsbException | UsbNotActiveException | UsbDisconnectedException ex) {
-        Logger.getLogger(AvcomSBS.class.getName()).log(Level.SEVERE, null, ex);
-      }
-    }
-  }
-
-  /**
    * Connect to a network-attached sensor.
    * <p>
    * @param inetAddress the IP address of the remote sensor. The factory default
@@ -501,6 +339,10 @@ public class AvcomSBS implements Runnable {
    */
   @SuppressWarnings("SleepWhileInLoop")
   private void initialize() throws UsbException, Exception {
+    /**
+     * Configure the FTDI serial port to Avcom specifications.
+     */
+    ftdi.setSerialPort(DEFAULT_BAUD_RATE, ELineDatabits.BITS_8, ELineStopbits.STOP_BIT_1, ELineParity.NONE, EFlowControl.DISABLE_FLOW_CTRL);
     /**
      * Get a HardwareDescriptionResponse from the device. Try a few times to
      * allow for the device to boot up and also to accommodate some sloppiness
@@ -535,7 +377,7 @@ public class AvcomSBS implements Runnable {
      * raise an error condition.
      */
     if (hardwareDescription == null) {
-      throw new Exception("AvcomSBS initialization failed. Unable to retrieve a Hardware Description Response from " + usbDevice.toString());
+      throw new Exception("AvcomSBS initialization failed. Unable to retrieve a Hardware Description Response from " + ftdi.toString());
     }
     /**
      * At this point a HardwareDescriptionResponse has been retrieved and the
@@ -559,22 +401,11 @@ public class AvcomSBS implements Runnable {
   @SuppressWarnings({"NestedAssignment", "ValueOfIncrementOrDecrementUsed"})
   private IDatagram read() throws Exception {
     /**
-     * Open the USB READ pipe if it is not yet opened.
-     */
-    if (!usbPipeRead.isOpen()) {
-      usbPipeRead.open();
-    }
-    /**
      * Make a note of the (attempted) read operation.
      */
     if (hardwareDescription != null) {
       hardwareDescription.setDatagramRead();
     }
-    /**
-     * Store the USB device maximum packet size in a local variable for
-     * convenience.
-     */
-    short wMaxPacketSize = usbPipeRead.getUsbEndpoint().getUsbEndpointDescriptor().wMaxPacketSize();
     /**
      * Initialize the first USB packet and the bytesRead indicator. These are
      * used in the first iteration of the while-loop below.
@@ -614,7 +445,7 @@ public class AvcomSBS implements Runnable {
      */
     byte[] avcomDatagram = null;
     int avcomDatagramIndex = 0;
-    byte[] usbPacket = new byte[wMaxPacketSize];
+    int readLoop = 0;
     /**
      * The return value will indicate the number of bytes successfully
      * transferred from the target endpoint. The return value will never exceed
@@ -624,10 +455,9 @@ public class AvcomSBS implements Runnable {
      * they send. The modem status is send as a header for each read access. In
      * the absence of data the FTDI chip will generate the status every 40 ms.
      */
-    int bytesRead;
-    int readLoop = 0;
-    while ((bytesRead = usbPipeRead.syncSubmit(usbPacket)) > FTDIUtil.MODEM_STATUS_HEADER_LENGTH) {
-      System.out.println("    READ [" + bytesRead + "] " + ByteUtil.toString(usbPacket));
+    byte[] usbPacket = ftdi.read();
+    while (usbPacket.length > 0) {
+//      System.out.println("    READ [" + usbPacket.length + "] " + ByteUtil.toString(usbPacket));
       /**
        * Developer note: There is a race condition with the FTDI chip where it
        * will produce infinite zeros if the settings are not configured properly
@@ -653,7 +483,7 @@ public class AvcomSBS implements Runnable {
        * length indicator. Add the USB header and it is located at the sixth USB
        * packet byte (index = 5).
        */
-      if (usbPacket[2] == IDatagram.FLAG_STX && EAvcomDatagram.fromByteCode(usbPacket[5]) != null) {
+      if (usbPacket[0] == IDatagram.FLAG_STX && EAvcomDatagram.fromByteCode(usbPacket[3]) != null) {
         /**
          * Initialize the Avcom datagram byte buffer to the length indicated in
          * the datagram packet header (Avcom datagram byte index 1 and 2). The
@@ -703,9 +533,9 @@ public class AvcomSBS implements Runnable {
         /**
          * copyLength is the number of array elements to be copied.
          */
-        int copyLength = (bytesRead - 2 + avcomDatagramIndex > avcomDatagram.length
+        int copyLength = (usbPacket.length + avcomDatagramIndex > avcomDatagram.length
           ? avcomDatagram.length - avcomDatagramIndex
-          : bytesRead - 2);
+          : usbPacket.length);
 
         /**
          * DEBUG output. This dumps the bytes read to the console for analysis.
@@ -716,14 +546,14 @@ public class AvcomSBS implements Runnable {
 //          + "] avcomDatagramIndex [" + avcomDatagramIndex
 //          + "] copylength [" + copyLength + "]");
         System.arraycopy(usbPacket,
-                         2,
+                         0,
                          avcomDatagram,
                          avcomDatagramIndex,
                          copyLength);
         avcomDatagramIndex += copyLength;
       }
       /**
-       * Important: Reinitialize the usbPacket byte array.
+       * Important: READ new data into the usbPacket byte array.
        * <p>
        * Developer note: The syncSubmit (and presumably asyncSubmit) do not
        * clear the input byte array - they merely write bytes into the provided
@@ -731,7 +561,7 @@ public class AvcomSBS implements Runnable {
        * new bytes are written over the old bytes but if the new packet is
        * shorter then old bytes will remain.
        */
-      usbPacket = new byte[wMaxPacketSize];
+      usbPacket = ftdi.read();
     }
     /**
      * At this point the Avcom datagram is either null (e.g. the HOST is
@@ -756,27 +586,12 @@ public class AvcomSBS implements Runnable {
    */
   private void write(IDatagram datagram) throws UsbException {
     /**
-     * Open the USB WRITE pipe if it is not yet opened.
-     */
-    if (!usbPipeWrite.isOpen()) {
-      usbPipeWrite.open();
-    }
-    /**
      * Since all Avcom write operations are small we use a standard USB IRP
      * container to send commands to the device or write bytes directly to the
      * port. Both methods achieve the same result. In this case since all
      * datagrams have a serialize method writing bytes is easier to code.
      */
-    /**
-     * The UsbIrp method.
-     */
-//    IUsbIrp usbIrp = usbPipeWrite.createUsbIrp();
-//    usbIrp.setData(datagram.serialize());
-//    usbPipeWrite.syncSubmit(usbIrp);
-    /**
-     * The direct method.
-     */
-    usbPipeWrite.syncSubmit(datagram.serialize());
+    ftdi.write(datagram.serialize());
 //    System.out.println("    WRITE [" + datagram.serialize().length + "] " + ByteUtil.toString(datagram.serialize()));
     /**
      * Developer note: Important: Wait a bit for the datagram to be processed
@@ -951,6 +766,11 @@ public class AvcomSBS implements Runnable {
          */
 //        System.err.println("DEBUG AvcomSBS data capture run error: " + exception.getMessage());
 //        Logger.getLogger(AvcomSBS.class.getName()).log(Level.SEVERE, null, exception);
+        /**
+         * Note the error in the hardware description queue.
+         */
+        hardwareDescription.setDatagramError();
+
       }
     }
   }
@@ -960,7 +780,7 @@ public class AvcomSBS implements Runnable {
    */
   public void start() {
     this.run = true;
-    this.runThread = new Thread(this, usbDevice.toString());
+    this.runThread = new Thread(this, ftdi.toString());
     this.runThread.start();
   }
 
