@@ -29,7 +29,7 @@ import com.avcomfova.sbs.datagram.IDatagram;
 import com.avcomofva.sbs.datagram.write.SettingsRequest;
 import com.avcomofva.sbs.enumerated.EAvcomReferenceLevel;
 import com.avcomofva.sbs.enumerated.EAvcomResolutionBandwidth;
-import com.keybridgeglobal.sensor.util.ftdi.FTDI;
+import com.ftdichip.usb.FTDIUtil;
 import java.util.ArrayList;
 import java.util.List;
 import javax.usb.*;
@@ -52,7 +52,7 @@ public class Test_AvcomSBS implements IDatagramListener {
 
 //    AvcomSBS avcom = new AvcomSBS();
 //    IUsbDevice iUsbDevice = test.findAvcomIUsbDevice();
-    List<IUsbDevice> iUsbDeviceList = FTDI.findFTDIDevices();
+    List<IUsbDevice> iUsbDeviceList = FTDIUtil.findFTDIDevices();
     if (iUsbDeviceList.isEmpty()) {
       System.out.println("No AvcomSBS devices attached. EXIT.");
       return;

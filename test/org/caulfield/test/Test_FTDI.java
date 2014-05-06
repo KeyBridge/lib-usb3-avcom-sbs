@@ -25,8 +25,14 @@
  */
 package org.caulfield.test;
 
+import com.avcomofva.sbs.datagram.write.HardwareDescriptionRequest;
+import com.ftdichip.usb.FTDI;
+import com.ftdichip.usb.FTDIUtil;
+import com.ftdichip.usb.enumerated.EFlowControl;
+import com.ftdichip.usb.enumerated.ELineDatabits;
+import com.ftdichip.usb.enumerated.ELineParity;
+import com.ftdichip.usb.enumerated.ELineStopbits;
 import com.keybridgeglobal.sensor.util.ByteUtil;
-import com.keybridgeglobal.sensor.util.ftdi.FTDI;
 import java.util.ArrayList;
 import java.util.List;
 import javax.usb.*;
@@ -45,21 +51,40 @@ public class Test_FTDI {
 
   public static void main(String[] args) throws Exception {
     Test_FTDI test = new Test_FTDI();
-    IUsbDevice device = test.findAvcomIUsbDevice();
+    IUsbDevice usbDevice = test.findAvcomIUsbDevice();
 
-    System.out.println(ByteUtil.toStringFormatted(FTDI.FTDI_DEVICE_OUT_REQTYPE));
-
-    System.out.println(ByteUtil.toStringFormatted(FTDI.FTDI_USB_CONFIGURATION_WRITE));
-
+//    System.out.println(ByteUtil.toStringFormatted(FTDI.FTDI_DEVICE_OUT_REQTYPE));
+//    System.out.println(ByteUtil.toStringFormatted(FTDI.FTDI_USB_CONFIGURATION_WRITE));
     System.out.println("HOST_TO_DEVICE \n" + ByteUtil.toStringFormatted(HOST_TO_DEVICE.getByteCode()));
     System.out.println("VENDOR         \n" + ByteUtil.toStringFormatted(BMRequestType.EType.VENDOR.getByteCode()));
     System.out.println("DEVICE         \n" + ByteUtil.toStringFormatted(BMRequestType.ERecipient.DEVICE.getByteCode()));
 
-    System.out.println("device " + device);
+    System.out.println("device " + usbDevice);
 
 //    FTDI ftdi = new FTDI();
-    FTDI.setBaudRate(device, 115200);
-    FTDI.setDTR(device, false);
+    FTDIUtil.setBaudRate(usbDevice, 115200);
+    FTDIUtil.setLineProperty(usbDevice,
+                             ELineDatabits.BITS_8,
+                             ELineStopbits.STOP_BIT_1,
+                             ELineParity.NONE);
+    FTDIUtil.setFlowControl(usbDevice, EFlowControl.DISABLE_FLOW_CTRL);
+    FTDIUtil.setDTRRTS(usbDevice, false, true);
+
+    FTDI ftdi = new FTDI(usbDevice);
+
+    byte[] write = new HardwareDescriptionRequest().serialize();
+
+    for (int i = 0; i < 5; i++) {
+      ftdi.write(write);
+      System.out.println("WRITE [" + write.length + "] " + ByteUtil.toString(write));
+
+      byte[] usbPacket = ftdi.read();
+      while (usbPacket.length > 0) {
+        System.out.println("   READ [" + usbPacket.length + "] " + ByteUtil.toString(usbPacket));
+        usbPacket = ftdi.read();
+      }
+    }
+
 //    ftdi.setDtr(false);
   }
 

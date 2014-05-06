@@ -35,9 +35,13 @@ import com.avcomofva.sbs.datagram.write.HardwareDescriptionRequest;
 import com.avcomofva.sbs.datagram.write.SettingsRequest;
 import com.avcomofva.sbs.datagram.write.TraceRequest;
 import com.avcomofva.sbs.enumerated.EAvcomDatagram;
+import com.ftdichip.usb.FTDIUtil;
+import com.ftdichip.usb.enumerated.EFlowControl;
+import com.ftdichip.usb.enumerated.ELineDatabits;
+import com.ftdichip.usb.enumerated.ELineParity;
+import com.ftdichip.usb.enumerated.ELineStopbits;
 import com.keybridgeglobal.sensor.util.ByteUtil;
 import com.keybridgeglobal.sensor.util.StopWatch;
-import com.keybridgeglobal.sensor.util.ftdi.FTDI;
 import java.net.InetAddress;
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -374,7 +378,6 @@ public class AvcomSBS implements Runnable {
      */
     IUsbConfiguration configuration = usbDevice.getActiveUsbConfiguration();
     /**
-     * <p>
      * Developer note: AvcomSBS devices have only ONE IUsbInterface (Interface
      * #0). Therefore always get and use the first available IUsbInterface from
      * the list.
@@ -413,17 +416,17 @@ public class AvcomSBS implements Runnable {
      * <p>
      * Set the serial port baud rate. '26' is the pre-calculated sub-integer
      * divisor corresponding to a baud rate of 115,384 baud: the closest
-     * supported baud rate to Avcoms specified requirement of 115,200.
+     * supported baud rate to Avcom's specified requirement of 115,200.
      * <p>
      * Set the serial port DTR to 'unasserted'.
      */
-    FTDI.setBaudRate(usbDevice, 115200);
-    FTDI.setLineProperty(usbDevice,
-                         FTDI.LineDatabits.BITS_8,
-                         FTDI.LineStopbits.STOP_BIT_1,
-                         FTDI.LineParity.NONE);
-    FTDI.setFlowControl(usbDevice, FTDI.SIO_DISABLE_FLOW_CTRL);
-    FTDI.setDTRRTS(usbDevice, false, true);
+    FTDIUtil.setBaudRate(usbDevice, 115200);
+    FTDIUtil.setLineProperty(usbDevice,
+                             ELineDatabits.BITS_8,
+                             ELineStopbits.STOP_BIT_1,
+                             ELineParity.NONE);
+    FTDIUtil.setFlowControl(usbDevice, EFlowControl.DISABLE_FLOW_CTRL);
+    FTDIUtil.setDTRRTS(usbDevice, false, true);
 
     /**
      * Scan the interface UsbEndPoint list to set the READ and WRITE IUsbPipe.
@@ -616,10 +619,14 @@ public class AvcomSBS implements Runnable {
      * The return value will indicate the number of bytes successfully
      * transferred from the target endpoint. The return value will never exceed
      * the total size of the provided buffer.
+     * <p>
+     * FTDI UART chips add a two-byte modem status header to every USB Packet
+     * they send. The modem status is send as a header for each read access. In
+     * the absence of data the FTDI chip will generate the status every 40 ms.
      */
     int bytesRead;
     int readLoop = 0;
-    while ((bytesRead = usbPipeRead.syncSubmit(usbPacket)) > 2) {
+    while ((bytesRead = usbPipeRead.syncSubmit(usbPacket)) > FTDIUtil.MODEM_STATUS_HEADER_LENGTH) {
       System.out.println("    READ [" + bytesRead + "] " + ByteUtil.toString(usbPacket));
       /**
        * Developer note: There is a race condition with the FTDI chip where it
