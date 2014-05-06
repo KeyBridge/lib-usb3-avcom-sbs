@@ -418,12 +418,12 @@ public class AvcomSBS implements Runnable {
      * Set the serial port DTR to 'unasserted'.
      */
     FTDI.setBaudRate(usbDevice, 115200);
-    FTDI.setDTRRTS(usbDevice, false, true);
     FTDI.setLineProperty(usbDevice,
                          FTDI.LineDatabits.BITS_8,
                          FTDI.LineStopbits.STOP_BIT_1,
                          FTDI.LineParity.NONE);
     FTDI.setFlowControl(usbDevice, FTDI.SIO_DISABLE_FLOW_CTRL);
+    FTDI.setDTRRTS(usbDevice, false, true);
 
     /**
      * Scan the interface UsbEndPoint list to set the READ and WRITE IUsbPipe.
