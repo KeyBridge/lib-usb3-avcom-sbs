@@ -23,21 +23,23 @@
  * ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
  * POSSIBILITY OF SUCH DAMAGE.
  */
-package org.caulfield.test;
+package com.avcomfova.sbs;
 
 import java.util.List;
 import javax.usb.*;
 import javax.usb.exception.UsbDisconnectedException;
 import javax.usb.exception.UsbException;
 import javax.usb.exception.UsbNotActiveException;
+import org.junit.Test;
 
 /**
  *
- * @author Jesse Caulfield <jesse@caulfield.org>
+ * @author Jesse Caulfield
  */
 public class Test_USBConnect {
 
-  public static void main(String[] args) throws Exception {
+  @Test
+  public void test() throws Exception {
 
     IUsbDevice iUsbDevice = null;
     for (IUsbConfiguration iUsbConfiguration : iUsbDevice.getUsbConfigurations()) {
@@ -114,7 +116,6 @@ public class Test_USBConnect {
 //                                                       (short) 1);
 //    irp.setData(new HardwareDescriptionRequest().serialize());
 //    iUsbDevice.syncSubmit(irp);
-
 //    iUsbInterface.claim(new IUsbInterfacePolicy() {
 //
 //      @Override

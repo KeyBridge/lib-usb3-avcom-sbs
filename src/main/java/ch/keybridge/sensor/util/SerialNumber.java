@@ -23,17 +23,29 @@
  * ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
  * POSSIBILITY OF SUCH DAMAGE.
  */
-package com.avcomfova.sbs;
+package ch.keybridge.sensor.util;
+
+import java.util.concurrent.atomic.AtomicLong;
 
 /**
- * Generic Sensor interface.
+ * 06/11/11 - created based on SerialNumber class in Sensor 0.4.1 package
+ * Modified to return Long instead of String, Made this class static
  * <p>
- * This ultimately will provide a standard (SensorML-compliant) contract for
- * discovery geolocation unit of measure, processing of sensor observations a
- * sensor programming mechanism and subscription to sensor alerts.
+ * Usage: serialnumber.getSerialNumber
  * <p>
- * @author Jesse Caulfield
+ * @author jesse
  */
-public interface ISensor {
+public class SerialNumber {
 
+  private static final AtomicLong atomicLong = new AtomicLong(System.currentTimeMillis());
+
+  /**
+   * @return An atomically unique serial number based on a time stamp.
+   */
+  public static long get() {
+    return atomicLong.getAndIncrement();
+  }
+
+  private SerialNumber() {
+  }
 }

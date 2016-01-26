@@ -35,7 +35,7 @@ import com.avcomofva.sbs.enumerated.EAvcomDatagram;
  * Get HW Description is recommended to be performed first to determine
  * available control options and operating parameters.
  * <p>
- * @author Jesse Caulfield <jesse@caulfield.org>
+ * @author Jesse Caulfield
  */
 public class HardwareDescriptionRequest extends ADatagram {
 

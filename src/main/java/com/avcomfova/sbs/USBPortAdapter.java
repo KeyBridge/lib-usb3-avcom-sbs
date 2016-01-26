@@ -35,7 +35,7 @@ import org.usb4java.javax.UsbHub;
 /**
  * Communications adapter implementation for USB serial ports.
  * <p>
- * @author Jesse Caulfield <jesse@caulfield.org>
+ * @author Jesse Caulfield
  */
 public class USBPortAdapter {
 

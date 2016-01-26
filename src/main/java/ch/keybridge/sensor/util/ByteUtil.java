@@ -13,7 +13,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package com.keybridgeglobal.sensor.util;
+package ch.keybridge.sensor.util;
 
 import java.text.DecimalFormat;
 import java.util.Random;
@@ -22,7 +22,7 @@ import java.util.Random;
  * Byte and Bit manipulation utilities. This provides a number of convenience
  * methods to simplify byte conversion and bit shifting.
  * <p>
- * @author Jesse Caulfield <jesse@caulfield.org>
+ * @author Jesse Caulfield
  */
 @SuppressWarnings("ValueOfIncrementOrDecrementUsed")
 public class ByteUtil {

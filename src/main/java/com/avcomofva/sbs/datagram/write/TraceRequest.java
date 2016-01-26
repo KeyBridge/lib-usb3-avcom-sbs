@@ -28,7 +28,7 @@ package com.avcomofva.sbs.datagram.write;
 import com.avcomfova.sbs.datagram.ADatagram;
 import com.avcomofva.sbs.datagram.read.TraceResponse;
 import com.avcomofva.sbs.enumerated.EAvcomDatagram;
-import com.keybridgeglobal.sensor.util.ByteUtil;
+import ch.keybridge.sensor.util.ByteUtil;
 
 /**
  * Avcom 8-bit Waveform Datagram (Firmware >= v1.9). From Table 6: Waveform
@@ -36,7 +36,7 @@ import com.keybridgeglobal.sensor.util.ByteUtil;
  * <p>
  * The device responds with a {@linkplain TraceResponse}
  * <p>
- * @author Jesse Caulfield <jesse@caulfield.org>
+ * @author Jesse Caulfield
  */
 public class TraceRequest extends ADatagram {
 

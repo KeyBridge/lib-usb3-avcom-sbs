@@ -26,13 +26,13 @@
 package com.avcomfova.sbs.datagram;
 
 import com.avcomofva.sbs.enumerated.EAvcomDatagram;
-import com.keybridgeglobal.sensor.util.SerialNumber;
+import ch.keybridge.sensor.util.SerialNumber;
 
 /**
  * An abstract Datagram implementation with all basic methods and variables
  * common to all datagrams.
  * <p>
- * @author Jesse Caulfield <jesse@caulfield.org>
+ * @author Jesse Caulfield
  */
 @SuppressWarnings("ProtectedField")
 public abstract class ADatagram implements IDatagram {

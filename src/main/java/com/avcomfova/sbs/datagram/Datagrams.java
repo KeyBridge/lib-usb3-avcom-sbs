@@ -34,7 +34,7 @@ import com.avcomofva.sbs.enumerated.EAvcomDatagram;
  * A helper utility class to quickly identify and parse Avcom datagram bytes
  * into a useful datagram instance.
  * <p>
- * @author Jesse Caulfield <jesse@caulfield.org>
+ * @author Jesse Caulfield
  */
 public class Datagrams {
 

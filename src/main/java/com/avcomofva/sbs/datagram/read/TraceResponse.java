@@ -30,7 +30,7 @@ import com.avcomofva.sbs.enumerated.EAvcomDatagram;
 import com.avcomofva.sbs.enumerated.EAvcomProductID;
 import com.avcomofva.sbs.enumerated.EAvcomReferenceLevel;
 import com.avcomofva.sbs.enumerated.EAvcomResolutionBandwidth;
-import com.keybridgeglobal.sensor.util.ByteUtil;
+import ch.keybridge.sensor.util.ByteUtil;
 import java.util.Map;
 import java.util.TreeMap;
 
@@ -38,7 +38,7 @@ import java.util.TreeMap;
  * Waveform Response Datagram from Avcom devices 8-bit waveform packet (Firmware
  * rev >= v1.9 Table 9
  * <p>
- * @author Jesse Caulfield <jesse@caulfield.org>
+ * @author Jesse Caulfield
  */
 public class TraceResponse extends ADatagram {
 

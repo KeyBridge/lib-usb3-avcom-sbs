@@ -27,7 +27,7 @@ package com.avcomofva.sbs.datagram.read;
 
 import com.avcomfova.sbs.datagram.ADatagram;
 import com.avcomofva.sbs.enumerated.*;
-import com.keybridgeglobal.sensor.util.ByteUtil;
+import ch.keybridge.sensor.util.ByteUtil;
 import java.beans.BeanInfo;
 import java.beans.IntrospectionException;
 import java.beans.Introspector;
@@ -39,7 +39,7 @@ import java.util.*;
 /**
  * Avcom Hardware Description Datagram Described in Table 7
  * <p>
- * @author Jesse Caulfield <jesse@caulfield.org>
+ * @author Jesse Caulfield
  */
 public final class HardwareDescriptionResponse extends ADatagram {
 

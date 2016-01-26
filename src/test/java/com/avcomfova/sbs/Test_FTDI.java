@@ -23,7 +23,7 @@
  * ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
  * POSSIBILITY OF SUCH DAMAGE.
  */
-package org.caulfield.test;
+package com.avcomfova.sbs;
 
 import com.avcomofva.sbs.datagram.write.HardwareDescriptionRequest;
 import com.ftdichip.usb.FTDI;
@@ -32,24 +32,29 @@ import com.ftdichip.usb.enumerated.EFlowControl;
 import com.ftdichip.usb.enumerated.ELineDatabits;
 import com.ftdichip.usb.enumerated.ELineParity;
 import com.ftdichip.usb.enumerated.ELineStopbits;
-import com.keybridgeglobal.sensor.util.ByteUtil;
+import ch.keybridge.sensor.util.ByteUtil;
 import java.util.ArrayList;
 import java.util.List;
-import javax.usb.*;
+import javax.usb.IUsbDevice;
+import javax.usb.IUsbHub;
+import javax.usb.IUsbServices;
+import javax.usb.UsbHostManager;
 import javax.usb.exception.UsbException;
 import static javax.usb.ri.enumerated.EEndpointDirection.HOST_TO_DEVICE;
 import javax.usb.ri.request.BMRequestType;
+import org.junit.Test;
 
 /**
  *
- * @author Jesse Caulfield <jesse@caulfield.org>
+ * @author Jesse Caulfield
  */
 public class Test_FTDI {
 
   private static final short vendorId = 0x0403;
   private static final short productId = 0x6001;
 
-  public static void main(String[] args) throws Exception {
+  @Test
+  public void test() throws Exception {
     Test_FTDI test = new Test_FTDI();
     IUsbDevice usbDevice = test.findAvcomIUsbDevice();
 
@@ -133,7 +138,7 @@ public class Test_FTDI {
      * See javax.usb.util.UsbUtil.unsignedInt() for some more information.
      */
     if (vendorId == iUsbDevice.getUsbDeviceDescriptor().idVendor()
-      && productId == iUsbDevice.getUsbDeviceDescriptor().idProduct()) {
+        && productId == iUsbDevice.getUsbDeviceDescriptor().idProduct()) {
       iUsbDeviceList.add(iUsbDevice);
     }
     /*

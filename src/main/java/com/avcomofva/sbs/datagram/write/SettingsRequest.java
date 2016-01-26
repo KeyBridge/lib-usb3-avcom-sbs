@@ -30,7 +30,7 @@ import com.avcomfova.sbs.datagram.IDatagram;
 import com.avcomofva.sbs.enumerated.EAvcomDatagram;
 import com.avcomofva.sbs.enumerated.EAvcomReferenceLevel;
 import com.avcomofva.sbs.enumerated.EAvcomResolutionBandwidth;
-import com.keybridgeglobal.sensor.util.ByteUtil;
+import ch.keybridge.sensor.util.ByteUtil;
 
 /**
  * Change Settings Request Datagram for Avcom devices. From Table 12: Change
@@ -38,7 +38,7 @@ import com.keybridgeglobal.sensor.util.ByteUtil;
  * <p>
  * Developer note: Devices do not reply to a change settings command.
  * <p>
- * @author Jesse Caulfield <jesse@caulfield.org>
+ * @author Jesse Caulfield
  */
 public class SettingsRequest extends ADatagram {
 

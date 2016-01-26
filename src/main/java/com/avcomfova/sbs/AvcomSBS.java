@@ -41,8 +41,8 @@ import com.ftdichip.usb.enumerated.EFlowControl;
 import com.ftdichip.usb.enumerated.ELineDatabits;
 import com.ftdichip.usb.enumerated.ELineParity;
 import com.ftdichip.usb.enumerated.ELineStopbits;
-import com.keybridgeglobal.sensor.util.ByteUtil;
-import com.keybridgeglobal.sensor.util.StopWatch;
+import ch.keybridge.sensor.util.ByteUtil;
+import ch.keybridge.sensor.util.StopWatch;
 import java.net.InetAddress;
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -77,7 +77,7 @@ import javax.usb.exception.UsbException;
  * following Linux flavors: AMD64, i386, ARM. Other operating systems and
  * variants should work but are not tested.
  * <p>
- * @author Jesse Caulfield <jesse@caulfield.org>
+ * @author Jesse Caulfield
  */
 public class AvcomSBS implements Runnable {
 

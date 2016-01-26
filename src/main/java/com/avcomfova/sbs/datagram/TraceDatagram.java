@@ -39,7 +39,7 @@ import java.util.TreeMap;
  * received from Avcom sensors. This TraceDatagram supports serialization and
  * arbitrary trace size.
  * <p>
- * @author Jesse Caulfield <jesse@caulfield.org>
+ * @author Jesse Caulfield
  */
 public class TraceDatagram extends ADatagram {
 

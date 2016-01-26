@@ -27,13 +27,13 @@ package com.avcomofva.sbs.datagram.write;
 
 import com.avcomfova.sbs.datagram.ADatagram;
 import com.avcomofva.sbs.enumerated.EAvcomDatagram;
-import com.keybridgeglobal.sensor.util.ByteUtil;
+import ch.keybridge.sensor.util.ByteUtil;
 
 /**
  * Avcom 12-bit Waveform Datagram (Firmware >= v2.10). From Table 6: Waveform
  * Transmission Settings.
  * <p>
- * @author Jesse Caulfield <jesse@caulfield.org>
+ * @author Jesse Caulfield
  * @deprecated 04/29/14 - 8 bits provides sufficient resolution for our needs.
  * The 12-bit trace response datagram is not supported in the AvcomSBS extended
  * data handling implementation.

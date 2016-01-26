@@ -30,7 +30,7 @@ import com.avcomofva.sbs.enumerated.EAvcomDatagram;
 import com.avcomofva.sbs.enumerated.EAvcomProductID;
 import com.avcomofva.sbs.enumerated.EAvcomReferenceLevel;
 import com.avcomofva.sbs.enumerated.EAvcomResolutionBandwidth;
-import com.keybridgeglobal.sensor.util.ByteUtil;
+import ch.keybridge.sensor.util.ByteUtil;
 import java.util.Map;
 import java.util.TreeMap;
 
@@ -40,7 +40,7 @@ import java.util.TreeMap;
  * <p>
  * The device responds with a {@linkplain TraceResponse12Bit}
  * <p>
- * @author Jesse Caulfield <jesse@caulfield.org>
+ * @author Jesse Caulfield
  * @deprecated 04/29/14 - 8 bits provides sufficient resolution for our needs.
  * This response datagram is not supported in the AvcomSBS extended data
  * handling implementation.

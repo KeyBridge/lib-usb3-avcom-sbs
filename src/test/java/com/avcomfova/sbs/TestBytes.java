@@ -23,19 +23,21 @@
  * ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
  * POSSIBILITY OF SUCH DAMAGE.
  */
-package org.caulfield.test;
+package com.avcomfova.sbs;
 
 import com.avcomofva.sbs.datagram.read.HardwareDescriptionResponse;
 import com.avcomofva.sbs.enumerated.EAvcomDatagram;
-import com.keybridgeglobal.sensor.util.ByteUtil;
+import ch.keybridge.sensor.util.ByteUtil;
+import org.junit.Test;
 
 /**
  *
- * @author Jesse Caulfield <jesse@caulfield.org>
+ * @author Jesse Caulfield
  */
 public class TestBytes {
 
-  public static void main(String[] args) throws Exception {
+  @Test
+  public void test() throws Exception {
     byte[] foo = {0, 1, 2, (byte) 0x55, 3, 6, (byte) 0xff, 5, 4, 6, 9, 8, 7};
 
     System.out.println(ByteUtil.toStringFormatted(foo));

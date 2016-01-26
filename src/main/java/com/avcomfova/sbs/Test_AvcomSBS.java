@@ -40,14 +40,14 @@ import org.usb4java.javax.UsbHub;
 
 /**
  *
- * @author Jesse Caulfield <jesse@caulfield.org>
+ * @author Jesse Caulfield
  */
 public class Test_AvcomSBS implements IDatagramListener {
   
   private static final short vendorId = 0x0403;
   private static final short productId = 0x6001;
   
-  public static void main(String[] args) throws UsbException, Exception {
+  public void test() throws UsbException, Exception {
     System.out.println("DEBUG Test_AvcomSBS");
     
     Test_AvcomSBS test = new Test_AvcomSBS();

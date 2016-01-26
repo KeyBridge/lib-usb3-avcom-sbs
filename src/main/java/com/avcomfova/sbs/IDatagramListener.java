@@ -11,7 +11,7 @@ import java.util.EventListener;
  * Interface describing the methods called when a datagram is received from a
  * sensor device. This extends EventListener.
  * <p>
- * @author Jesse Caulfield <jesse@caulfield.org>
+ * @author Jesse Caulfield
  */
 public interface IDatagramListener extends EventListener {
 

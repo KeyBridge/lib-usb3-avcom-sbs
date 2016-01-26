@@ -29,7 +29,7 @@ package com.avcomofva.sbs.enumerated;
  * Avcom Enumerated Datagram types. Each type contains its corresponding byte
  * code.
  * <p>
- * @author Jesse Caulfield <jesse@caulfield.org>
+ * @author Jesse Caulfield
  */
 public enum EAvcomDatagram {
 
