@@ -238,12 +238,12 @@ public class AvcomSBS implements Runnable {
          * Add each new SettingsRequest to the queue, sorted by centerFrequency.
          */
         if (sr.getStartFrequencyMHz() > hardwareDescription.getProductId().getMinFrequency()
-          && sr.getStopFrequencyMHz() < hardwareDescription.getProductId().getMaxFrequency()) {
+            && sr.getStopFrequencyMHz() < hardwareDescription.getProductId().getMaxFrequency()) {
           synchronized (settingsRequestQueue) {
             settingsRequestQueue.put(cfiMHz, sr);
           }
         } else if (sr.getStartFrequencyMHz() < hardwareDescription.getProductId().getMinFrequency()
-          && sr.getStopFrequencyMHz() > hardwareDescription.getProductId().getMinFrequency()) {
+                   && sr.getStopFrequencyMHz() > hardwareDescription.getProductId().getMinFrequency()) {
           /**
            * The settings request is low. Shift the frequencies to the right
            * (higher).
@@ -257,7 +257,7 @@ public class AvcomSBS implements Runnable {
             settingsRequestQueue.put(newcf, sr);
           }
         } else if (sr.getStartFrequencyMHz() < hardwareDescription.getProductId().getMaxFrequency()
-          && sr.getStopFrequencyMHz() > hardwareDescription.getProductId().getMaxFrequency()) {
+                   && sr.getStopFrequencyMHz() > hardwareDescription.getProductId().getMaxFrequency()) {
           /**
            * The settings request is hight. Shift the frequencies to the left
            * (lower).
@@ -534,8 +534,8 @@ public class AvcomSBS implements Runnable {
          * copyLength is the number of array elements to be copied.
          */
         int copyLength = (usbPacket.length + avcomDatagramIndex > avcomDatagram.length
-          ? avcomDatagram.length - avcomDatagramIndex
-          : usbPacket.length);
+                          ? avcomDatagram.length - avcomDatagramIndex
+                          : usbPacket.length);
 
         /**
          * DEBUG output. This dumps the bytes read to the console for analysis.
@@ -791,5 +791,4 @@ public class AvcomSBS implements Runnable {
     this.run = false;
     this.runThread.interrupt();
   }//</editor-fold>
-
 }

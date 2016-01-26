@@ -1,16 +1,27 @@
 
-## generic files to ignore
-*~
-*.lock
-*.DS_Store
-*.swp
-*.out
 
- #java specific
+# NetBeans specific #
+nbproject/private/
+build/
+nbbuild/
+dist/
+nbdist/
+nbactions.xml
+nb-configuration.xml
+
+# Class Files #
 *.class
 
-#netbeans ignore personal stuff 
-nbproject/private/
+# Package Files #
+*.jar
+*.war
+*.ear
 
-build/
-dist/
+# Maven Dirs
+target/
+pom.xml.tag
+pom.xml.releaseBackup
+pom.xml.versionsBackup
+pom.xml.next
+release.properties
+nbactions.xml
