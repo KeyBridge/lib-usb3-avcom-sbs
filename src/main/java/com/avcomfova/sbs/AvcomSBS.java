@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2014, Jesse Caulfield <jesse@caulfield.org>
+ * Copyright (c) 2014, Jesse Caulfield
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -25,24 +25,23 @@
  */
 package com.avcomfova.sbs;
 
-import com.avcomfova.sbs.datagram.Datagrams;
+import com.avcomfova.sbs.datagram.Datagram;
 import com.avcomfova.sbs.datagram.IDatagram;
-import com.avcomfova.sbs.datagram.TraceDatagram;
+import com.avcomfova.sbs.datagram.Waveform;
 import com.avcomofva.sbs.datagram.read.ErrorResponse;
 import com.avcomofva.sbs.datagram.read.HardwareDescriptionResponse;
-import com.avcomofva.sbs.datagram.read.TraceResponse;
+import com.avcomofva.sbs.datagram.read.Waveform8BitResponse;
 import com.avcomofva.sbs.datagram.write.HardwareDescriptionRequest;
 import com.avcomofva.sbs.datagram.write.SettingsRequest;
-import com.avcomofva.sbs.datagram.write.TraceRequest;
-import com.avcomofva.sbs.enumerated.EAvcomDatagram;
+import com.avcomofva.sbs.datagram.write.Waveform8BitRequest;
+import com.avcomofva.sbs.enumerated.EDatagramType;
+import com.avcomofva.utility.StopWatch;
 import com.ftdichip.usb.FTDI;
-import static com.ftdichip.usb.FTDI.DEFAULT_BAUD_RATE;
+import static com.ftdichip.usb.FTDIUtility.DEFAULT_BAUD_RATE;
 import com.ftdichip.usb.enumerated.EFlowControl;
 import com.ftdichip.usb.enumerated.ELineDatabits;
 import com.ftdichip.usb.enumerated.ELineParity;
 import com.ftdichip.usb.enumerated.ELineStopbits;
-import ch.keybridge.sensor.util.ByteUtil;
-import ch.keybridge.sensor.util.StopWatch;
 import java.net.InetAddress;
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -53,13 +52,14 @@ import java.util.concurrent.ConcurrentSkipListMap;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 import javax.usb.exception.UsbException;
+import javax.usb.utility.ByteUtility;
 
 /**
  * Sensor implementation supporting the Avcom SBS single-board-sensor platform.
  * This includes the RSA-2500 series and all Avcom of Virginia products build
  * upon that basic sensor platform.
  * <p>
- * This {@linkplain ISensor} implementation provides a set of simple methods to
+ * This {@link ISensor} implementation provides a set of simple methods to
  * control an Avcom SBS device and to stream data from that device. Actual
  * communication with the device is handled via a dedicated (new) thread
  * (created by this class) and is ASYNCHRONOUS: control messages are submitted
@@ -68,18 +68,19 @@ import javax.usb.exception.UsbException;
  * between 1 and 100 ms between an initial control request and data availability
  * from the device.
  * <p>
- * Developer note: To communicate with USB-attached devices this package uses
- * and requires the <code>usb4java</code> library and its underlying native
- * system library <code>libusb</code>.
- * <p>
  * The Avcom SBS device uses the FTDI UART to USB converter. This implementation
- * includes an internal FTDI USB/serial port driver. It is known to work on the
+ * depends upon the FTDI USB/serial port driver. It is known to work on the
  * following Linux flavors: AMD64, i386, ARM. Other operating systems and
  * variants should work but are not tested.
- * <p>
+ *
  * @author Jesse Caulfield
  */
 public class AvcomSBS implements Runnable {
+
+  /**
+   * A static logger.
+   */
+  private static final Logger logger = Logger.getLogger(AvcomSBS.class.getName());
 
   /**
    * The USB Device to which this AvcomSBS device is attached. This is the FTDI
@@ -106,11 +107,15 @@ public class AvcomSBS implements Runnable {
   private final List<IDatagramListener> datagramListeners;
 
   /**
-   * Avcom devices return a maximum of 320 (for 8-bit) or 480 (for 12 bit) bytes
-   * of data per trace. This places a limit on the available resolution during a
-   * wideband spectrum sweep. This limitation is overcome by stepping through a
-   * list of device configurations, iteratively re-tuning the sensor to perform
-   * a piecewise wideband scan.
+   * A thread-safe queue of device tuning configurations.
+   * <p>
+   * Avcom hardware devices return a maximum of 320 bytes or 480 bytes of data
+   * per trace for 8-bit or 12 bit resolution, respectively. This hardware
+   * limitation constrains the maximum / minimum possible resolution bandwidth
+   * of a wideband spectrum sweep, which is overcome by stepping through a list
+   * of device configurations, each of which iteratively re-tune the sensor to
+   * build up the total scan from a number of incremental, piecewise wideband
+   * scans.
    * <p>
    * This queue of device configurations (SettingsRequest datagrams) is scanned
    * by the data capture thread and so must support concurrence. Settings may be
@@ -120,22 +125,24 @@ public class AvcomSBS implements Runnable {
    * SettingsRequest entries are stored using the sample center frequency (MHz)
    * as a key.
    */
-  private static final ConcurrentMap<Double, SettingsRequest> settingsRequestQueue = new ConcurrentSkipListMap<>();
+  private static final ConcurrentMap<Double, SettingsRequest> SETTINGS_REQUEST_QUEUE = new ConcurrentSkipListMap<>();
   /**
-   * As with the SettingsRequestQueue, this queue stores piecewise sampled trace
-   * data corresponding to each SettingsRequest entry.
+   * A thread-safe queue of device sense data.
    * <p>
-   * TraceResponse (8 bit) entries are stored using their center frequency (MHz)
-   * as a key. An interface is required in this map since the READ method does
-   * not return type-specific datagram instances.
+   * This queue stores piecewise sampled trace data corresponding to each entry
+   * in the SettingsRequest queue.
+   * <p>
+   * Waveform8BitResponse (8 or 12-bit) entries are stored using their center
+   * frequency (MHz) as a key. An interface is required in this map since the
+   * READ method does not return type-specific datagram instances.
    */
   private static final ConcurrentMap<Double, IDatagram> traceDatagramQueue = new ConcurrentSkipListMap<>();
   /**
    * Tread helper flag to indicate that new settings have been requested and any
    * current scans (especially a wide-band scan) should be immediately
    * interrupted and the new settings should be used. As wide-band scans can
-   * take some time (up to 15 or 20 seconds) this thread interrupt is important
-   * for a responsive user interface.
+   * take some time (up to 15 or 20 seconds) this thread interrupt is
+   * particularly important to ensure a responsive user interface.
    */
   private boolean newSettings = false;
 
@@ -146,14 +153,14 @@ public class AvcomSBS implements Runnable {
    * This will automatically connect to the device. This also created a shutdown
    * hook to automatically disconnect from the USB port when the application
    * exits.
-   * <p>
+   *
    * @param ftdi the FTDI serial I/O USB Device to which this AvcomSBS device is
    *             attached.
    * @throws UsbException if the USB Device cannot be attached or claimed for
    *                      use
    */
   public AvcomSBS(final FTDI ftdi) throws UsbException, Exception {
-    System.out.println("Opening AvcomSBS on USB " + ftdi);
+    logger.log(Level.INFO, "Opening AvcomSBS on USB {0}", ftdi);
     /**
      * Set the USB Device.
      */
@@ -175,7 +182,7 @@ public class AvcomSBS implements Runnable {
    * If required, the user settings will be divided into multiple smaller
    * SettingsRequest datagrams and placed onto an internal queue for iterative
    * processing.
-   * <p>
+   *
    * @param settingsRequest
    */
   public void setSettings(SettingsRequest settingsRequest) {
@@ -187,8 +194,8 @@ public class AvcomSBS implements Runnable {
      * Purge the current SettingsRequest queue. The Trace data queue will be
      * cleared by the data collector thread.
      */
-    synchronized (settingsRequestQueue) {
-      settingsRequestQueue.clear();
+    synchronized (SETTINGS_REQUEST_QUEUE) {
+      SETTINGS_REQUEST_QUEUE.clear();
     }
     /**
      * If the SettingsRequest span and RBW require more data points than a
@@ -212,16 +219,16 @@ public class AvcomSBS implements Runnable {
      *  cf_i = w * (1/2 + i) + start
      * </pre>
      */
-    if (settingsRequest.getSpanMHz() > TraceResponse.TRACE_DATA_LENGTH * settingsRequest.getResolutionBandwidth().getMHz()) {
-//      System.out.println("DEBUG setSettings must be split into multiples " + settingsRequest);
+    if (settingsRequest.getSpanMHz() > Waveform8BitResponse.DATAGRAM_PAYLOAD_LENGTH * settingsRequest.getResolutionBandwidth().getMHz()) {
+      logger.log(Level.FINE, "Avcom settings must be split into multiples {0}", settingsRequest);
       /**
        * The request requires more data points than a single Trace can carry.
        */
       double startMHz = settingsRequest.getCenterFrequencyMHz() - settingsRequest.getSpanMHz() / 2;
       double stopMHz = settingsRequest.getCenterFrequencyMHz() + settingsRequest.getSpanMHz() / 2;
-      double sampleSpanMHz = TraceResponse.TRACE_DATA_LENGTH * settingsRequest.getResolutionBandwidth().getMHz();
+      double sampleSpanMHz = Waveform8BitResponse.DATAGRAM_PAYLOAD_LENGTH * settingsRequest.getResolutionBandwidth().getMHz();
       int numSettings = (int) (settingsRequest.getSpanMHz() / sampleSpanMHz) + 1;
-//      System.out.println("DEBUG setSettings start/stop " + startMHz + " / " + stopMHz + " samplespan " + sampleSpanMHz + " numSettings " + numSettings);
+      logger.log(Level.FINE, "Avcom set {0} to {1} MHz, span {2}, {3} passes", new Object[]{startMHz, stopMHz, sampleSpanMHz, numSettings});
       for (int iterator = 0; iterator < numSettings; iterator++) {
         /**
          * The iterator center frequency cf_i in MHz.
@@ -239,8 +246,8 @@ public class AvcomSBS implements Runnable {
          */
         if (sr.getStartFrequencyMHz() > hardwareDescription.getProductId().getMinFrequency()
             && sr.getStopFrequencyMHz() < hardwareDescription.getProductId().getMaxFrequency()) {
-          synchronized (settingsRequestQueue) {
-            settingsRequestQueue.put(cfiMHz, sr);
+          synchronized (SETTINGS_REQUEST_QUEUE) {
+            SETTINGS_REQUEST_QUEUE.put(cfiMHz, sr);
           }
         } else if (sr.getStartFrequencyMHz() < hardwareDescription.getProductId().getMinFrequency()
                    && sr.getStopFrequencyMHz() > hardwareDescription.getProductId().getMinFrequency()) {
@@ -252,9 +259,9 @@ public class AvcomSBS implements Runnable {
           double newcf = span / 2d + hardwareDescription.getProductId().getMinFrequency();
           sr.setCenterFrequencyMHz(newcf);
           sr.setSpanMHz(span);
-//          System.out.println("  low: adjusted to " + sr);
-          synchronized (settingsRequestQueue) {
-            settingsRequestQueue.put(newcf, sr);
+          logger.log(Level.FINER, "Avcom adjusted lower value to {0} MHz", sr);
+          synchronized (SETTINGS_REQUEST_QUEUE) {
+            SETTINGS_REQUEST_QUEUE.put(newcf, sr);
           }
         } else if (sr.getStartFrequencyMHz() < hardwareDescription.getProductId().getMaxFrequency()
                    && sr.getStopFrequencyMHz() > hardwareDescription.getProductId().getMaxFrequency()) {
@@ -266,12 +273,12 @@ public class AvcomSBS implements Runnable {
           double newcf = span / 2d + sr.getStartFrequencyMHz();
           sr.setCenterFrequencyMHz(newcf);
           sr.setSpanMHz(span);
-//          System.out.println("high: adjusted to " + sr);
-          synchronized (settingsRequestQueue) {
-            settingsRequestQueue.put(newcf, sr);
+          logger.log(Level.FINER, "Avcom adjusted upper value to {0} MHz", sr);
+          synchronized (SETTINGS_REQUEST_QUEUE) {
+            SETTINGS_REQUEST_QUEUE.put(newcf, sr);
           }
         } else {
-//          System.out.println("settings are out of bounds. discard " + sr);
+          logger.log(Level.WARNING, "Avcom settings out of bounds. Discard {0}", sr);
         }
       } // end for numsamples
     } else {
@@ -293,8 +300,8 @@ public class AvcomSBS implements Runnable {
         sr.setCenterFrequencyMHz(newcf);
         sr.setSpanMHz(span);
       }
-      synchronized (settingsRequestQueue) {
-        settingsRequestQueue.put(settingsRequest.getCenterFrequencyMHz(), sr);
+      synchronized (SETTINGS_REQUEST_QUEUE) {
+        SETTINGS_REQUEST_QUEUE.put(settingsRequest.getCenterFrequencyMHz(), sr);
       }
     }  // end else
     /**
@@ -307,16 +314,16 @@ public class AvcomSBS implements Runnable {
   /**
    * Get the device configuration. This returns a sorted map of device
    * configuration names and their corresponding values.
-   * <p>
+   *
    * @return a non-null Map instance.
    */
   public Map<String, String> getConfiguration() {
-    return hardwareDescription != null ? hardwareDescription.getConfiguration() : new HashMap<String, String>();
+    return hardwareDescription != null ? hardwareDescription.getConfiguration() : new HashMap<>();
   }
 
   /**
    * Connect to a network-attached sensor.
-   * <p>
+   *
    * @param inetAddress the IP address of the remote sensor. The factory default
    *                    IP address is <code>192.168.118.242</code>, listening on
    *                    port <code>26482</code>.
@@ -334,7 +341,7 @@ public class AvcomSBS implements Runnable {
   /**
    * Initialize the Avcom device by sending a few HardwareDescriptionRequest
    * datagrams down the wire.
-   * <p>
+   *
    * @throws UsbException if the datagrams cannot be written to the device.
    */
   @SuppressWarnings("SleepWhileInLoop")
@@ -342,7 +349,7 @@ public class AvcomSBS implements Runnable {
     /**
      * Configure the FTDI serial port to Avcom specifications.
      */
-    ftdi.setSerialPort(DEFAULT_BAUD_RATE, ELineDatabits.BITS_8, ELineStopbits.STOP_BIT_1, ELineParity.NONE, EFlowControl.DISABLE_FLOW_CTRL);
+    ftdi.configureSerialPort(DEFAULT_BAUD_RATE, ELineDatabits.BITS_8, ELineStopbits.STOP_BIT_1, ELineParity.NONE, EFlowControl.DISABLE_FLOW_CTRL);
     /**
      * Get a HardwareDescriptionResponse from the device. Try a few times to
      * allow for the device to boot up and also to accommodate some sloppiness
@@ -358,7 +365,7 @@ public class AvcomSBS implements Runnable {
       IDatagram datagram = read();
       if (datagram instanceof HardwareDescriptionResponse) {
         hardwareDescription = (HardwareDescriptionResponse) datagram;
-//        System.out.println("DEBUG AvcomSBS device initialized " + hardwareDescription);
+        logger.log(Level.FINE, "AvcomSBS initialized OK. {0}", hardwareDescription);
         break; // bread out of the FOR loop if hardware description received.
       }
       /**
@@ -366,10 +373,10 @@ public class AvcomSBS implements Runnable {
        * then wait one second a try again.
        */
       try {
-        System.err.println("AvcomSBS device initialization try " + (i + 1) + ".");
+        logger.log(Level.WARNING, "AvcomSBS initialization Error. Try {0} of 5.", (i + 1));
         Thread.sleep(1000);
       } catch (InterruptedException ex) {
-        Logger.getLogger(AvcomSBS.class.getName()).log(Level.SEVERE, null, ex);
+        logger.log(Level.SEVERE, null, ex);
       }
     }
     /**
@@ -392,7 +399,7 @@ public class AvcomSBS implements Runnable {
    * many byte[] chunks. This method blocks until all available data is read off
    * the port. Once the port read is completed the data is parsed into an Avcom
    * datagram instance and all datagram listeners are notified.
-   * <p>
+   *
    * @return an Avcom datagram instance.
    * @throws UsbException if the USB port cannot be accessed
    * @throws Exception    if the Avcom data cannot be parsed into a valid
@@ -455,9 +462,9 @@ public class AvcomSBS implements Runnable {
      * they send. The modem status is send as a header for each read access. In
      * the absence of data the FTDI chip will generate the status every 40 ms.
      */
-    byte[] usbPacket = ftdi.read();
-    while (usbPacket.length > 0) {
-//      System.out.println("    READ [" + usbPacket.length + "] " + ByteUtil.toString(usbPacket));
+    byte[] usbFrame = ftdi.read();
+    while (usbFrame.length > 0) {
+      logger.log(Level.FINEST, "Avcom READ [{0}] {1}", new Object[]{usbFrame.length, ByteUtility.toString(usbFrame)});
       /**
        * Developer note: There is a race condition with the FTDI chip where it
        * will produce infinite zeros if the settings are not configured properly
@@ -483,17 +490,17 @@ public class AvcomSBS implements Runnable {
        * length indicator. Add the USB header and it is located at the sixth USB
        * packet byte (index = 5).
        */
-      if (usbPacket[0] == IDatagram.FLAG_STX && EAvcomDatagram.fromByteCode(usbPacket[3]) != null) {
+      if (usbFrame[0] == IDatagram.STX && EDatagramType.fromByteCode(usbFrame[3]) != null) {
         /**
          * Initialize the Avcom datagram byte buffer to the length indicated in
          * the datagram packet header (Avcom datagram byte index 1 and 2). The
-         * USB Packet byte index 3 tells ByteUtil to skip the 2-byte header.
+         * USB Packet byte index 3 tells ByteUtility to skip the 2-byte header.
          * <p>
          * Add four additional bytes the Avcom datagram byte array to include
          * the Avcom packet header information, which is not included in the
          * Avcom datagram length number.
          */
-        avcomDatagram = new byte[ByteUtil.twoByteIntFromBytes(usbPacket, 3) + 4];
+        avcomDatagram = new byte[ByteUtility.twoByteIntFromBytes(usbFrame, 3) + 4];
         /**
          * Important: Initialize the Avcom Datagram byte buffer index to zero.
          * The avcomDatagramIndex is used to copy fresh data into the byte
@@ -524,7 +531,7 @@ public class AvcomSBS implements Runnable {
        * discarded datagram will also be discarded. Eventually (after the
        * discarded datagram is read through) the host will have caught up with
        * the Avcom sensor and USB packets will re-align with an Avcom datagram.
-       * <p>
+       *
        * @TODO: Analyze USB packet data as a byte stream. Detect and trigger
        * Avcom datagram STX and ETX flags to start and conclude a read
        * operation.
@@ -533,19 +540,19 @@ public class AvcomSBS implements Runnable {
         /**
          * copyLength is the number of array elements to be copied.
          */
-        int copyLength = (usbPacket.length + avcomDatagramIndex > avcomDatagram.length
+        int copyLength = (usbFrame.length + avcomDatagramIndex > avcomDatagram.length
                           ? avcomDatagram.length - avcomDatagramIndex
-                          : usbPacket.length);
-
+                          : usbFrame.length);
         /**
          * DEBUG output. This dumps the bytes read to the console for analysis.
          */
-//        System.out.println("  USB PIPE READ " + bytesRead + " bytes "
-//          + usbPacket.length + " [" + ByteUtil.toString(usbPacket)
-//          + "]  avcomDatagram.length [" + avcomDatagram.length
-//          + "] avcomDatagramIndex [" + avcomDatagramIndex
-//          + "] copylength [" + copyLength + "]");
-        System.arraycopy(usbPacket,
+        logger.log(Level.FINEST,
+                   "Avcom USB PIPE READ {0} [{1}]  length [{2}] index [{3}] length [{4}]",
+                   new Object[]{usbFrame.length, ByteUtility.toString(usbFrame), avcomDatagram.length, avcomDatagramIndex, copyLength});
+        /**
+         * Read out data from the USB packet into an Avcom datagram.
+         */
+        System.arraycopy(usbFrame,
                          0,
                          avcomDatagram,
                          avcomDatagramIndex,
@@ -561,7 +568,7 @@ public class AvcomSBS implements Runnable {
        * new bytes are written over the old bytes but if the new packet is
        * shorter then old bytes will remain.
        */
-      usbPacket = ftdi.read();
+      usbFrame = ftdi.read();
     }
     /**
      * At this point the Avcom datagram is either null (e.g. the HOST is
@@ -575,12 +582,12 @@ public class AvcomSBS implements Runnable {
      * from the data collection RUN process, which assembles and distributes
      * TraceDatagram instances.
      */
-    return avcomDatagram == null ? null : Datagrams.getInstance(avcomDatagram);
+    return avcomDatagram == null ? null : Datagram.getInstance(avcomDatagram);
   }
 
   /**
    * Write a REQUEST datagram to the Avcom device.
-   * <p>
+   *
    * @param datagram the REQUEST-type datagram to write to the Avcom device
    * @throws UsbException if the USB port cannot be written to
    */
@@ -592,7 +599,9 @@ public class AvcomSBS implements Runnable {
      * datagrams have a serialize method writing bytes is easier to code.
      */
     ftdi.write(datagram.serialize());
-//    System.out.println("    WRITE [" + datagram.serialize().length + "] " + ByteUtil.toString(datagram.serialize()));
+    logger.log(Level.FINE,
+               "Avcom WRITE [{0}] {1}",
+               new Object[]{datagram.serialize().length, ByteUtility.toString(datagram.serialize())});
     /**
      * Developer note: Important: Wait a bit for the datagram to be processed
      * (especially new settings) to take effect. Avcom devices need about 2 to 5
@@ -618,7 +627,7 @@ public class AvcomSBS implements Runnable {
   /**
    * Internal method called when an Avcom datagram has been read off the device.
    * The datagram is forwarded to all listeners when they are notified.
-   * <p>
+   *
    * @param datagram the datagram to forward
    */
   private void notifyListeners(IDatagram datagram) {
@@ -629,7 +638,7 @@ public class AvcomSBS implements Runnable {
 
   /**
    * Add a Datagram Listener to receive datagrams when ready
-   * <p>
+   *
    * @param listener the listener instance
    */
   public synchronized void addListener(IDatagramListener listener) {
@@ -638,7 +647,7 @@ public class AvcomSBS implements Runnable {
 
   /**
    * Remove a DatagramListener
-   * <p>
+   *
    * @param listener the listener instance
    */
   public synchronized void removeListener(IDatagramListener listener) {
@@ -662,7 +671,7 @@ public class AvcomSBS implements Runnable {
 
   /**
    * Get the percent complete of the current sweep.
-   * <p>
+   *
    * @return the sweep progress, from zero to 100.
    */
   public int getPercentComplete() {
@@ -682,7 +691,7 @@ public class AvcomSBS implements Runnable {
          * Clear the datagram queue to be filled with new entries.
          */
         traceDatagramQueue.clear();
-        for (Map.Entry<Double, SettingsRequest> entry : settingsRequestQueue.entrySet()) {
+        for (Map.Entry<Double, SettingsRequest> settingsEntry : SETTINGS_REQUEST_QUEUE.entrySet()) {
           /**
            * Write the SettingsRequest, then immediately request and read a new
            * TRACE. READ will notify any listeners of the new data Trace.
@@ -697,34 +706,34 @@ public class AvcomSBS implements Runnable {
            * TraceRequest.
            */
           stopwatch.startTimer();
-          write(entry.getValue());
-          write(new TraceRequest());
+          write(settingsEntry.getValue());
+          write(new Waveform8BitRequest());
           IDatagram datagram = read();
-          datagram.setElapsedTimeMillis(stopwatch.getElapsedTimeMillis());
+          datagram.setElapsedTime(stopwatch.getElapsedTimeMillis());
           /**
            * Developer note: Important: READ can return any type of datagram,
            * including a NULL value. Always inspect the returned datagram to
            * ensure it is not null and is actually a TraceResponse.
            */
-          if (datagram instanceof TraceResponse) {
-            traceDatagramQueue.put(entry.getKey(), datagram);
-            hardwareDescription.setElapsedTime(datagram.getElapsedTimeMillis());
+          if (datagram instanceof Waveform8BitResponse) {
+            traceDatagramQueue.put(settingsEntry.getKey(), datagram);
+            hardwareDescription.setElapsedTime(datagram.getElapsedTime());
           } else if (datagram instanceof ErrorResponse) {
             hardwareDescription.setDatagramError();
-//            System.err.println("AvcomSBS data capture received error response: " + ((ErrorResponse) datagram).getErrorMessage());
+//            LOG.log(Level.WARNING, "AvcomSBS data capture received error response: {0}", ((ErrorResponse) datagram).getErrorMessage());
           }
           /**
            * Update the percent complete. This is used to provide user interface
            * progress and feedback.
            */
-          percentComplete = (double) traceDatagramQueue.size() / (double) settingsRequestQueue.size();
+          percentComplete = (double) traceDatagramQueue.size() / (double) SETTINGS_REQUEST_QUEUE.size();
           /**
            * Fire a progress change event. This is picked up by any UI widgets
            * watching this instance.
-           * <p>
+           *
            * @TODO: Not yet implemented. Fire a progress change event
            */
-//          fireProgressChange(percentComplete)/
+//          fireProgressChange(percentComplete);
           /**
            * If new settings were set then break out of the current FOR loop and
            * restart a new FOR loop with the new settings (we are still within
@@ -750,9 +759,9 @@ public class AvcomSBS implements Runnable {
         /**
          * Assemble a final Trace from the collected Trace Data Queue.
          */
-        TraceDatagram traceDatagram = TraceDatagram.getInstance(settingsRequest);
+        Waveform traceDatagram = Waveform.getInstance(settingsRequest);
         for (Map.Entry<Double, IDatagram> entry : traceDatagramQueue.entrySet()) {
-          traceDatagram.addData((TraceResponse) entry.getValue());
+          traceDatagram.addData((Waveform8BitResponse) entry.getValue());
         }
         /**
          * Notify all listeners with the assembled TraceDatagram.
@@ -760,17 +769,16 @@ public class AvcomSBS implements Runnable {
         notifyListeners(traceDatagram);
       } catch (Exception exception) {
         /**
-         * Since we are operating in a rapid loop ignore individual datagram
-         * build-related run capture errors. This will cause any errored
-         * datagram to be discarded.
+         * Since we are typically operating in a rapid loop ignore individual
+         * datagram build-related run capture errors. This will cause all
+         * errored datagram to be discarded.
          */
-//        System.err.println("DEBUG AvcomSBS data capture run error: " + exception.getMessage());
-//        Logger.getLogger(AvcomSBS.class.getName()).log(Level.SEVERE, null, exception);
+//        LOG.log(Level.WARNING, "AvcomSBS data capture run error: {0}", exception.getMessage());
+//        LOG.log(Level.SEVERE, null, exception);
         /**
          * Note the error in the hardware description queue.
          */
         hardwareDescription.setDatagramError();
-
       }
     }
   }

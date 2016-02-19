@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2014, Jesse Caulfield <jesse@caulfield.org>
+ * Copyright (c) 2014, Jesse Caulfield
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -26,28 +26,39 @@
 package com.avcomofva.sbs.datagram.write;
 
 import com.avcomfova.sbs.datagram.ADatagram;
-import com.avcomofva.sbs.enumerated.EAvcomDatagram;
-import ch.keybridge.sensor.util.ByteUtil;
+import com.avcomofva.sbs.datagram.read.Waveform8BitResponse;
+import com.avcomofva.sbs.enumerated.EDatagramType;
+import com.avcomofva.sbs.enumerated.EStreamingType;
+import javax.usb.utility.ByteUtility;
 
 /**
- * Avcom 12-bit Waveform Datagram (Firmware >= v2.10). From Table 6: Waveform
- * Transmission Settings.
+ * Avcom 8-bit Waveform Datagram (Firmware >= v1.9).
  * <p>
+ * From Table 6: Waveform Transmission Settings.
+ * <p>
+ * The device responds with a {@link Waveform8BitResponse}
+ *
  * @author Jesse Caulfield
- * @deprecated 04/29/14 - 8 bits provides sufficient resolution for our needs.
- * The 12-bit trace response datagram is not supported in the AvcomSBS extended
- * data handling implementation.
  */
-public class TraceRequest12Bit extends ADatagram {
+public class Waveform8BitRequest extends ADatagram {
 
   /**
-   * A pre-configured message to get a single 12-bit trace. This places value 5
+   * The Datagram type.
+   */
+  private static final EDatagramType TYPE = EDatagramType.WAVEFORM_8BIT_REQUEST;
+  /**
+   * A pre-configured message to get a single 8-bit trace. This places value 3
    * at byte position 4. See Table 6 for byte order configuration.
    */
-  private static final byte[] GET_TRACE_REQUEST_MESSAGE = new byte[]{2, 0, 3, 3, 5, 3};
+  private static final byte[] MESSAGE_BYTES = new byte[]{STX,
+                                                         0,
+                                                         3,
+                                                         TYPE.getByteCode(),
+                                                         EStreamingType.SEND_8BIT,
+                                                         ETX};
 
-  public TraceRequest12Bit() {
-    super(EAvcomDatagram.TRACE_REQUEST);
+  public Waveform8BitRequest() {
+    super(TYPE);
     this.valid = true;
     this.elapsedTimeMillis = 1;
     this.transactionId = System.currentTimeMillis();
@@ -56,32 +67,30 @@ public class TraceRequest12Bit extends ADatagram {
   /**
    * Parse the byte array returned from the sensor and use it populate internal
    * fields.
-   * <p>
+   *
    * @param bytes the byte array returned from the sensor
    * @throws java.lang.Exception if the parse operation fails or encounters an
    *                             error
    */
   @Override
   public void parse(byte[] bytes) throws Exception {
-    /**
-     * no op.
-     */
+    // NO OP
   }
 
   @Override
   public byte[] serialize() {
-    return GET_TRACE_REQUEST_MESSAGE;
+    return MESSAGE_BYTES;
   }
 
   @Override
   public String toString() {
-    return "TR12: [" + datagramType
-      + "] SN: [" + transactionId
-      + "] Data: [" + ByteUtil.toString(GET_TRACE_REQUEST_MESSAGE) + "]";
+    return "TR: [" + type
+           + "] SN: [" + transactionId
+           + "] Data: [" + ByteUtility.toString(MESSAGE_BYTES) + "]";
   }
 
   public String toStringBrief() {
-    return "TR12: [" + datagramType
-      + "] SN: [" + transactionId + "]";
+    return "TR: [" + type
+           + "] SN: [" + transactionId + "]";
   }
 }

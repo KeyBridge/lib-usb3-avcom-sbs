@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2014, Jesse Caulfield <jesse@caulfield.org>
+ * Copyright (c) 2014, Jesse Caulfield
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -26,15 +26,16 @@
 package com.avcomofva.sbs.datagram.read;
 
 import com.avcomfova.sbs.datagram.ADatagram;
-import com.avcomofva.sbs.enumerated.EAvcomDatagram;
-import ch.keybridge.sensor.util.ByteUtil;
+import com.avcomofva.sbs.enumerated.EDatagramType;
+import java.util.Arrays;
+import javax.usb.utility.ByteUtility;
 
 /**
- * Avcom Error Response message. From Table 16: Error Message.
- * <p>
+ * Avcom Error Response message. (Table 16: Error Message.)
+ *
  * @author Jesse Caulfield
  */
-public class ErrorResponse extends ADatagram {
+public final class ErrorResponse extends ADatagram {
 
   /**
    * The error message returned from the Avcom device.
@@ -44,13 +45,13 @@ public class ErrorResponse extends ADatagram {
   /**
    * Construct a new ErrorResponse message from a byte array provided by an
    * Avcom device.
-   * <p>
+   *
    * @param bytes a device message
    * @throws java.lang.Exception if the parse operation fails or encounters an
    *                             error
    */
   public ErrorResponse(byte[] bytes) throws Exception {
-    super(EAvcomDatagram.ERROR_RESPONSE);
+    super(EDatagramType.ERROR_RESPONSE);
     this.valid = true;
     this.elapsedTimeMillis = 1;
     this.transactionId = System.currentTimeMillis();
@@ -59,7 +60,7 @@ public class ErrorResponse extends ADatagram {
 
   /**
    * Get the error message returned from the Avcom device.
-   * <p>
+   *
    * @return the error message
    */
   public String getErrorMessage() {
@@ -69,17 +70,18 @@ public class ErrorResponse extends ADatagram {
   /**
    * Parse the byte array returned from the sensor and use it populate internal
    * fields.
-   * <p>
+   *
    * @param bytes the byte array returned from the sensor
    * @throws java.lang.Exception if the parse operation fails or encounters an
    *                             error
    */
   @Override
   public void parse(byte[] bytes) throws Exception {
-    int length = ByteUtil.twoByteIntFromBytes(bytes, 1);
-    char[] chars = new char[length];
-    System.arraycopy(bytes, 4, chars, 0, length);
-    errorMessage = String.copyValueOf(chars);
+    int length = ByteUtility.twoByteIntFromBytes(bytes, 1);
+//    char[] chars = new char[length];
+//    System.arraycopy(bytes, 4, chars, 0, length);
+//    errorMessage = String.copyValueOf(chars);
+    this.errorMessage = new String(Arrays.copyOfRange(bytes, 4, length));
     this.valid = true;
   }
 
@@ -93,8 +95,8 @@ public class ErrorResponse extends ADatagram {
 
   @Override
   public String toString() {
-    return "ERR: [" + datagramType
-      + "] MSG: [" + errorMessage
-      + "]";
+    return "ERR: [" + type
+           + "] MSG: [" + errorMessage
+           + "]";
   }
 }

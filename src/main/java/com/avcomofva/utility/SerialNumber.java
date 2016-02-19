@@ -23,17 +23,28 @@
  * ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
  * POSSIBILITY OF SUCH DAMAGE.
  */
-package com.avcomfova.sbs;
+package com.avcomofva.utility;
+
+import java.util.concurrent.atomic.AtomicLong;
 
 /**
- * Generic Sensor interface.
- * <p>
- * This ultimately will provide a standard (SensorML-compliant) contract for
- * discovery geo-location unit of measure, processing of sensor observations a
- * sensor programming mechanism and subscription to sensor alerts.
+ * A serial number generator.
  *
- * @author Jesse Caulfield
+ * @author Jesse Caulfield 06/11/11 - created based on SerialNumber class in
+ * Sensor 0.4.1 package Modified to return Long instead of String, Make static.
+ *
  */
-public interface ISensor {
+public class SerialNumber {
 
+  private static final AtomicLong ATOMIC_LONG = new AtomicLong(System.currentTimeMillis());
+
+  /**
+   * @return An atomically unique serial number based on a time stamp.
+   */
+  public static long get() {
+    return ATOMIC_LONG.getAndIncrement();
+  }
+
+  private SerialNumber() {
+  }
 }

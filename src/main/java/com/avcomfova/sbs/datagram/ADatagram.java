@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2014, Jesse Caulfield <jesse@caulfield.org>
+ * Copyright (c) 2014, Jesse Caulfield
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -25,53 +25,55 @@
  */
 package com.avcomfova.sbs.datagram;
 
-import com.avcomofva.sbs.enumerated.EAvcomDatagram;
-import ch.keybridge.sensor.util.SerialNumber;
+import com.avcomofva.sbs.enumerated.EDatagramType;
+import com.avcomofva.utility.SerialNumber;
 
 /**
- * An abstract Datagram implementation with all basic methods and variables
- * common to all datagrams.
- * <p>
+ * An abstract Datagram implementation with basic methods and variables common
+ * to all datagrams.
+ *
  * @author Jesse Caulfield
  */
-@SuppressWarnings("ProtectedField")
 public abstract class ADatagram implements IDatagram {
 
-  // Datagram housekeeping -----------------------------------------------------
-  protected final EAvcomDatagram datagramType;
   /**
-   * The trace data read by the device (dB)
+   * The datagram type.
+   */
+  protected final EDatagramType type;
+  /**
+   * The datagram contents. E.g. trace data read by the device (dB)
    */
   protected double[] data;
   /**
-   * Indicator that the data produced by the device gram was correctly and
-   * completely parsed.
+   * Indicator that the data in this datagram was completely and correctly
+   * parsed.
    */
   protected boolean valid;
   /**
-   * how long it took for the hardware to create this Datagram in milliseconds
+   * The time (i.e. duration) it took for the hardware to create this Datagram
+   * (in milliseconds).
    */
   protected long elapsedTimeMillis;
   /**
    * A (optional) transaction identifier. This is used by a device controller to
-   * correlate TRACE_REQUESTS with TRACE_RESPONSES.
+   * correlate {@code REQUEST} and {@code RESPONSE} datagrams.
    */
   protected Long transactionId;
 
   /**
    * Construct a new ADatagram instance, setting the datagram type.
-   * <p>
+   *
    * @param datagramType the datagram type
    */
-  public ADatagram(EAvcomDatagram datagramType) {
-    this.datagramType = datagramType;
+  public ADatagram(EDatagramType datagramType) {
+    this.type = datagramType;
     this.transactionId = SerialNumber.get();
   }
 
   /**
    * Get the datagram raw data contents. The byte array may be raw or cooked
    * depending upon the implementation.
-   * <p>
+   *
    * @return the raw data array returned from the sensor
    */
   @Override
@@ -81,37 +83,36 @@ public abstract class ADatagram implements IDatagram {
 
   /**
    * Get the datagram type identifier
-   * <p>
+   *
    * @return the datagram type identifier
    */
   @Override
-  public EAvcomDatagram getDatagramType() {
-    return datagramType;
+  public EDatagramType getType() {
+    return type;
   }
 
   /**
    * Get the time required for the hardware to collect and create this Datagram
-   * <p>
+   *
    * @return Elapsed time in milliseconds
    */
   @Override
-  public long getElapsedTimeMillis() {
+  public long getElapsedTime() {
     return elapsedTimeMillis;
   }
 
   /**
    * Set the time required for the hardware to collect and create this Datagram
-   * <p>
+   *
    * @param elapsedTimeMS Elapsed time in milliseconds
    */
-  @Override
-  public void setElapsedTimeMillis(long elapsedTimeMS) {
+  public void setElapsedTime(long elapsedTimeMS) {
     this.elapsedTimeMillis = elapsedTimeMS;
   }
 
   /**
    * Set the serial number
-   * <p>
+   *
    * @return the job serial number
    */
   @Override
@@ -121,7 +122,7 @@ public abstract class ADatagram implements IDatagram {
 
   /**
    * Set the sensor job serial number.
-   * <p>
+   *
    * @param transactionId the sensor job serial number.
    */
   @Override
@@ -132,7 +133,7 @@ public abstract class ADatagram implements IDatagram {
   /**
    * Is this a properly structured and complete datagram - are all the bits in
    * place
-   * <p>
+   *
    * @return true if the datagram is valid
    */
   @Override
@@ -142,6 +143,6 @@ public abstract class ADatagram implements IDatagram {
 
   @Override
   public String toString() {
-    return datagramType + " ID: [" + transactionId + "]";
+    return type + " ID: [" + transactionId + "]";
   }
 }

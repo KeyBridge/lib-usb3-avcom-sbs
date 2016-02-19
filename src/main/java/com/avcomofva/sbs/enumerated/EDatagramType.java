@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2014, Jesse Caulfield <jesse@caulfield.org>
+ * Copyright (c) 2014, Jesse Caulfield
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -26,14 +26,32 @@
 package com.avcomofva.sbs.enumerated;
 
 /**
- * Avcom Enumerated Datagram types. Each type contains its corresponding byte
- * code.
+ * Enumerated datagram types for the Avcom SBS Single Board Embedded Spectrum
+ * Analyzer.
  * <p>
+ * Each type contains its corresponding byte code.
+ * <p>
+ * A Datagram is a “self-contained, independent entity of data carrying
+ * sufficient information to be routed from the source to the destination
+ * computer without reliance on earlier exchanges between this source and
+ * destination computer and the transporting network.”
+ *
  * @author Jesse Caulfield
  */
-public enum EAvcomDatagram {
-
-  // Datagram types that the sensor accepts --------------------------------------
+public enum EDatagramType {
+  /**
+   * Change Control Settings Request Datagram for Avcom devices. (Table 12)
+   */
+  /**
+   * Change Control Settings Request Datagram for Avcom devices. (Table 12)
+   */
+  /**
+   * Change Control Settings Request Datagram for Avcom devices. (Table 12)
+   */
+  /**
+   * Change Control Settings Request Datagram for Avcom devices. (Table 12)
+   */
+  SETTINGS_REQUEST((byte) 0x04),
   /**
    * Avcom Hardware Description Request Datagram.
    * <p>
@@ -41,80 +59,81 @@ public enum EAvcomDatagram {
    * HARDWARE_DESCRIPTION_REQUEST is 0x07, which is the same as the
    * HARDWARE_DESCRIPTION_RESPONSE. This breaks bytecode matching. Since the
    * hardware never produces a HARDWARE_DESCRIPTION_REQUEST we hard-code it here
-   * to 0x01 and hard-code it in the HARDWARE_DESCRIPTION_REQUEST instance as
-   * 0x07 to avoid the conflict.
+   * to 0x01 and hard-code the HARDWARE_DESCRIPTION_RESPONSE as 0x07 to avoid
+   * the conflict.
    */
   HARDWARE_DESCRIPTION_REQUEST((byte) 0x01),
   /**
-   * Get LNB Power description request.
-   */
-  LNB_DESCRIPTION_REQUEST((byte) 0x0D),
-  /**
-   * Change Settings Request Datagram for Avcom devices
-   */
-  SETTINGS_REQUEST((byte) 0x04),
-  /**
-   * Avcom 8-bit Waveform Datagram Trace request
-   */
-  TRACE_REQUEST((byte) 0x03),
-  /**
-   * Avcom 12-bit Waveform Datagram Trace request
-   */
-  TRACE_REQUEST_12BIT((byte) 0x03),
-  // Datagram types that the sensor creates --------------------------------------
-  /**
-   * Error datagram response.
-   */
-  ERROR_RESPONSE((byte) 0x60),
-  /**
-   * Avcom Hardware Description Datagram
+   * Avcom Hardware Description. (Table 7)
    */
   HARDWARE_DESCRIPTION_RESPONSE((byte) 0x07),
   /**
-   * LNB Power description response datagram for Avcom devices supporting LNB
-   * power.
+   * Get LNB Power description. (Table 5)
+   */
+  LNB_DESCRIPTION_REQUEST((byte) 0x0D),
+  /**
+   * LNB Power description. (For Avcom devices supporting LNB power.) (Table 8)
    */
   LNB_DESCRIPTION_RESPONSE((byte) 0x0D),
   /**
-   * Reserved response datagram for hardware debugging
+   * Avcom 8-bit Waveform Datagram request. (Table 6)
    */
-  RESERVED_RESPONSE((byte) 0x08), // for hardware debugging
+  WAVEFORM_8BIT_REQUEST((byte) 0x03),
   /**
-   * Waveform Response Datagram from Avcom devices 8-bit waveform packet
+   * 8-bit Waveform Response. (Table 10)
    */
-  TRACE_RESPONSE((byte) 0x09), // 8-bit encoded waveform data
+  WAVEFORM_8BIT_RESPONSE((byte) 0x09),
   /**
-   * Waveform Response Datagram from Avcom devices 12-bit waveform packet
+   * Avcom 12-bit Waveform Datagram request. (Table 6)
    */
-  TRACE_RESPONSE_12BIT((byte) 0x0F), // 12-bit encoded waveform data
-  // Key Bridge type extension ---------------------------------------------------
+  WAVEFORM_12BIT_REQUEST((byte) 0x03),
+  /**
+   * 12-bit Waveform Response. (Table 11)
+   */
+  WAVEFORM_12BIT_RESPONSE((byte) 0x0F),
+  /**
+   * Error datagram response. (Table 16)
+   */
+  ERROR_RESPONSE((byte) 0x60),
+  /**
+   * Reserved response datagram for hardware debugging. (Table 15)
+   */
+  RESERVED_RESPONSE((byte) 0x08),
   /**
    * Key Bridge extended Trace data container.
    */
-  TRACE_DATAGRAM((byte) 0xFF);
+  WAVEFORM((byte) 0xFF);
 
+  /**
+   * The datagram ID (byte-code).
+   */
   private final byte byteCode;
 
-  private EAvcomDatagram(byte byteCode) {
+  private EDatagramType(byte byteCode) {
     this.byteCode = byteCode;
   }
 
+  /**
+   * Get the datagram ID (byte-code).
+   *
+   * @return the datagram ID (byte-code).
+   */
   public byte getByteCode() {
     return byteCode;
   }
 
   /**
    * Get an Avcom datagram type by its corresponding byte code.
-   * <p>
+   *
    * @param byteCode the byte code
-   * @return the corresponding EAvcomDatagram instance
+   * @return the corresponding EDatagramType instance
    */
-  public static EAvcomDatagram fromByteCode(byte byteCode) {
-    for (EAvcomDatagram eAvcomDatagramType : EAvcomDatagram.values()) {
+  public static EDatagramType fromByteCode(byte byteCode) {
+    for (EDatagramType eAvcomDatagramType : EDatagramType.values()) {
       if (eAvcomDatagramType.getByteCode() == byteCode) {
         return eAvcomDatagramType;
       }
     }
-    return null;
+    throw new IllegalArgumentException("Unrecognized Avcom datagram type: " + byteCode);
   }
 }

@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2014, Jesse Caulfield <jesse@caulfield.org>
+ * Copyright (c) 2014, Jesse Caulfield
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -23,91 +23,100 @@
  * ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
  * POSSIBILITY OF SUCH DAMAGE.
  */
-package com.avcomfova.sbs;
+package com.avcomofva.sbs;
 
+import com.avcomfova.sbs.AvcomSBS;
+import com.avcomfova.sbs.IDatagramListener;
 import com.avcomfova.sbs.datagram.IDatagram;
 import com.avcomofva.sbs.datagram.write.SettingsRequest;
-import com.avcomofva.sbs.enumerated.EAvcomReferenceLevel;
-import com.avcomofva.sbs.enumerated.EAvcomResolutionBandwidth;
+import com.avcomofva.sbs.enumerated.EReferenceLevel;
+import com.avcomofva.sbs.enumerated.EResolutionBandwidth;
 import com.ftdichip.usb.FTDI;
-import com.ftdichip.usb.FTDIUtil;
+import com.ftdichip.usb.FTDIUtility;
 import java.util.ArrayList;
+import java.util.Collection;
 import java.util.List;
 import java.util.Map;
-import javax.usb.*;
+import javax.usb.IUsbDevice;
+import javax.usb.IUsbHub;
+import javax.usb.IUsbServices;
+import javax.usb.UsbHostManager;
 import javax.usb.exception.UsbException;
-import org.usb4java.javax.UsbHub;
+import org.junit.Test;
 
 /**
  *
  * @author Jesse Caulfield
  */
 public class Test_AvcomSBS implements IDatagramListener {
-  
-  private static final short vendorId = 0x0403;
-  private static final short productId = 0x6001;
-  
-  public void test() throws UsbException, Exception {
-    System.out.println("DEBUG Test_AvcomSBS");
-    
+
+  private static final short VENDOR_ID = 0x0403;
+  private static final short PRODUCT_ID = 0x6001;
+
+  @Test
+  public void testAvcomSBS() throws UsbException, Exception {
+    System.out.println("Test AvcomSBS");
+
     Test_AvcomSBS test = new Test_AvcomSBS();
 
 //    AvcomSBS avcom = new AvcomSBS();
 //    IUsbDevice iUsbDevice = test.findAvcomIUsbDevice();
-    List<IUsbDevice> iUsbDeviceList = FTDIUtil.findFTDIDevices();
+    Collection<IUsbDevice> iUsbDeviceList = FTDIUtility.findFTDIDevices();
     if (iUsbDeviceList.isEmpty()) {
-      System.out.println("No AvcomSBS devices attached. EXIT.");
+      System.out.println("No FTDI (ergo no AvcomSBS) devices attached. Aborting test.");
       return;
     }
-    
-    System.out.println("DEBUG Test_AvcomSBS " + iUsbDeviceList);
-    
-    AvcomSBS avcom = new AvcomSBS(new FTDI(iUsbDeviceList.get(0)));
-    avcom.addListener(test);
-    avcom.setSettings(new SettingsRequest(1250, 2500, EAvcomReferenceLevel.MINUS_10, EAvcomResolutionBandwidth.ONE_MHZ));
 
-//    System.out.println("RUN");
-//    avcom.run();
+    System.out.println("\nTest AvcomSBS at " + iUsbDeviceList.iterator().next());
+
+    AvcomSBS avcom = new AvcomSBS(new FTDI(iUsbDeviceList.iterator().next()));
+    avcom.addListener(test);
+    avcom.setSettings(new SettingsRequest(1250, 2500, EReferenceLevel.MINUS_10, EResolutionBandwidth.ONE_MHZ));
+
+    System.out.println("\nStarting Avcom SBS with full span sweep.");
     avcom.start();
-    
     Thread.sleep(15000);
-    
-    avcom.setSettings(new SettingsRequest(500, 300, EAvcomReferenceLevel.MINUS_50, EAvcomResolutionBandwidth.ONE_MHZ));
+    System.out.println("\nChanging Avcom SBS with narrow span sweep.");
+    avcom.setSettings(new SettingsRequest(500, 300, EReferenceLevel.MINUS_50, EResolutionBandwidth.ONE_MHZ));
     Thread.sleep(3000);
-    
+    System.out.println("\nStopping Avcom SBS");
     avcom.stop();
+
+    System.out.println("\nDumping Configuration");
     Map<String, String> configuration = avcom.getConfiguration();
-    System.out.println("Configuration -------------------");
+    System.out.println("  Avcom SBS ");
+    System.out.println(String.format("  %-30s : %s", "Configuration", "Value"));
+    System.out.println("--------------------------------------------------------");
     for (Map.Entry<String, String> entry : configuration.entrySet()) {
-      System.out.println(entry.getKey() + " = " + entry.getValue());
+      System.out.println(String.format("%-30s : %s", entry.getKey(), entry.getValue()));
     }
 
-    System.out.println("DEBUG Test_AvcomSBS DONE");
+    System.out.println("\nTest AvcomSBS DONE");
   }
 
   /**
    * Search the USB device tree and return the FIRST detected Avcom sensor
    * device.
-   * <p>
+   *
    * @return the first detected Avcom sensor device, null if none are found
    * @throws UsbException if the USB port cannot be read
    */
   public IUsbDevice findAvcomIUsbDevice() throws UsbException {
     IUsbServices usbServices = UsbHostManager.getUsbServices();
     IUsbHub virtualRootUsbHub = usbServices.getRootUsbHub();
-    List<IUsbDevice> iUsbDevices = getIUsbDeviceList(virtualRootUsbHub, vendorId, productId);
-    
+    List<IUsbDevice> iUsbDevices = getIUsbDeviceList(virtualRootUsbHub, VENDOR_ID, PRODUCT_ID);
+
     return iUsbDevices.isEmpty() ? null : iUsbDevices.get(0);
   }
-  
+
   @Override
   public void onDatagram(IDatagram datagram) {
-    System.out.println("DEBUG Test_Acvom onDatagram " + datagram.toString() + " elapsed time " + datagram.getElapsedTimeMillis());
+    System.out.println("DEBUG Test_Acvom onDatagram " + datagram.toString() + " elapsed time " + datagram.getElapsedTime());
   }
 
   /**
    * Get a List of all devices that match the specified vendor and product id.
-   * <p>
+   *
    * @param iUsbDevice The IUsbDevice to check.
    * @param vendorId   The vendor id to match.
    * @param productId  The product id to match.
@@ -117,25 +126,10 @@ public class Test_AvcomSBS implements IDatagramListener {
     List<IUsbDevice> iUsbDeviceList = new ArrayList<>();
     /*
      * A device's descriptor is always available. All descriptor field names and
-     * types match exactly what is in the USB specification. Note that Java does
-     * not have unsigned numbers, so if you are comparing 'magic' numbers to the
-     * fields, you need to handle it correctly. For example if you were checking
-     * for Intel (vendor id 0x8086) devices, if (0x8086 ==
-     * descriptor.idVendor()) will NOT work. The 'magic' number 0x8086 is a
-     * positive integer, while the _short_ vendor id 0x8086 is a negative
-     * number! So you need to do either if ((short)0x8086 ==
-     * descriptor.idVendor()) or if (0x8086 ==
-     * UsbUtil.unsignedInt(descriptor.idVendor())) or short intelVendorId =
-     * (short)0x8086; if (intelVendorId == descriptor.idVendor()) Note the last
-     * one, if you don't cast 0x8086 into a short, the compiler will fail
-     * because there is a loss of precision; you can't represent positive 0x8086
-     * as a short; the max value of a signed short is 0x7fff (see
-     * Short.MAX_VALUE).
-     *
-     * See javax.usb.util.UsbUtil.unsignedInt() for some more information.
+     * types match exactly what is in the USB specification.
      */
     if (vendorId == iUsbDevice.getUsbDeviceDescriptor().idVendor()
-      && productId == iUsbDevice.getUsbDeviceDescriptor().idProduct()) {
+        && productId == iUsbDevice.getUsbDeviceDescriptor().idProduct()) {
       iUsbDeviceList.add(iUsbDevice);
     }
     /*
@@ -143,7 +137,7 @@ public class Test_AvcomSBS implements IDatagramListener {
      * This is just normal recursion: Nothing special.
      */
     if (iUsbDevice.isUsbHub()) {
-      for (Object object : ((UsbHub) iUsbDevice).getAttachedUsbDevices()) {
+      for (Object object : ((IUsbHub) iUsbDevice).getAttachedUsbDevices()) {
         iUsbDeviceList.addAll(getIUsbDeviceList((IUsbDevice) object, vendorId, productId));
       }
     }
@@ -156,7 +150,7 @@ public class Test_AvcomSBS implements IDatagramListener {
    * <p>
    * The list includes the provided device. If the device is also a hub, the
    * list will include all devices connected to it, recursively.
-   * <p>
+   *
    * @param iUsbDevice The IUsbDevice to use.
    * @return An inclusive List of all connected IUsbDevices.
    */
@@ -165,7 +159,7 @@ public class Test_AvcomSBS implements IDatagramListener {
     iUsbDeviceList.add(iUsbDevice);
     if (iUsbDevice.isUsbHub()) {
 //      List<IUsbDevice> attachedDevices = ((UsbHub) iUsbDevice).getAttachedIUsbDevices();
-      for (Object attachedDevice : ((UsbHub) iUsbDevice).getAttachedUsbDevices()) {
+      for (Object attachedDevice : ((IUsbHub) iUsbDevice).getAttachedUsbDevices()) {
         iUsbDeviceList.addAll(getIUsbDeviceList((IUsbDevice) attachedDevice));
       }
     }

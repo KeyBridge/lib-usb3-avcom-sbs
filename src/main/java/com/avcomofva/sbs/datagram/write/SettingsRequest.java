@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2014, Jesse Caulfield <jesse@caulfield.org>
+ * Copyright (c) 2014, Jesse Caulfield
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -27,25 +27,31 @@ package com.avcomofva.sbs.datagram.write;
 
 import com.avcomfova.sbs.datagram.ADatagram;
 import com.avcomfova.sbs.datagram.IDatagram;
-import com.avcomofva.sbs.enumerated.EAvcomDatagram;
-import com.avcomofva.sbs.enumerated.EAvcomReferenceLevel;
-import com.avcomofva.sbs.enumerated.EAvcomResolutionBandwidth;
-import ch.keybridge.sensor.util.ByteUtil;
+import com.avcomofva.sbs.enumerated.EDatagramType;
+import com.avcomofva.sbs.enumerated.EReferenceLevel;
+import com.avcomofva.sbs.enumerated.EResolutionBandwidth;
+import javax.usb.utility.ByteUtility;
 
 /**
  * Change Settings Request Datagram for Avcom devices. From Table 12: Change
  * Settings firmware &ge; v1.9.
  * <p>
  * Developer note: Devices do not reply to a change settings command.
- * <p>
+ *
  * @author Jesse Caulfield
  */
 public class SettingsRequest extends ADatagram {
 
   /**
-   * The length of a change settings message (10 bytes)
+   * The Datagram type.
    */
-  private static final int SETTINGS_REQUEST_LENGTH = 0x0010; // table 12 Firmware >= 1.9
+  private static final EDatagramType TYPE = EDatagramType.SETTINGS_REQUEST;
+  /**
+   * 10 bytes. The length of a Change Settings Message.
+   * <p>
+   * (Table 12 Firmware >= v1.9)
+   */
+  private static final int SETTINGS_REQUEST_LENGTH = 0x0010;
 
   // Avcom Hardware Setting with default values
   /**
@@ -59,15 +65,17 @@ public class SettingsRequest extends ADatagram {
   /**
    * The new reference level (dB)
    */
-  private EAvcomReferenceLevel referenceLevel;
+  private EReferenceLevel referenceLevel;
   /**
    * The new resolution bandwidth (MHz)
    */
-  private EAvcomResolutionBandwidth resolutionBandwidth;
+  private EResolutionBandwidth resolutionBandwidth;
   /**
-   * The sensor input connector. Default is 1 (one). Change this value ONLY when
-   * operating with a multi-input RF front end, such as the RSA
-   * configuration,which has up to 6 RF inputs.
+   * The sensor input connector.
+   * <p>
+   * Default is 1 (one). Change this value ONLY when operating with a
+   * multi-input RF front end, such as the RSA configuration,which has up to 6
+   * RF inputs.
    */
   private int inputConnector = 1;
   // default to usb port
@@ -82,7 +90,7 @@ public class SettingsRequest extends ADatagram {
    * reference level and RBW must be configured prior to use.
    */
   public SettingsRequest() {
-    super(EAvcomDatagram.SETTINGS_REQUEST);
+    super(TYPE);
     this.valid = true;
     this.elapsedTimeMillis = 1;
     this.transactionId = System.currentTimeMillis();
@@ -90,13 +98,13 @@ public class SettingsRequest extends ADatagram {
 
   /**
    * Construct a new, fully qualified settings request.
-   * <p>
+   *
    * @param centerFrequencyMHz  The new center frequency (MHz)
    * @param spanMHz             The new span (MHz)
    * @param referenceLevel      The new reference level (dB)
    * @param resolutionBandwidth The new resolution bandwidth (MHz)
    */
-  public SettingsRequest(double centerFrequencyMHz, double spanMHz, EAvcomReferenceLevel referenceLevel, EAvcomResolutionBandwidth resolutionBandwidth) {
+  public SettingsRequest(double centerFrequencyMHz, double spanMHz, EReferenceLevel referenceLevel, EResolutionBandwidth resolutionBandwidth) {
     this();
     this.centerFrequencyMHz = centerFrequencyMHz;
     this.spanMHz = spanMHz;
@@ -110,11 +118,11 @@ public class SettingsRequest extends ADatagram {
    * <p>
    * This is useful for an out-of-the box start up configuration to view all
    * available frequencies.
-   * <p>
+   *
    * @return a default SettingsRequest instance
    */
   public static SettingsRequest getInstance() {
-    return new SettingsRequest(1250, 1250, EAvcomReferenceLevel.MINUS_50, EAvcomResolutionBandwidth.ONE_MHZ);
+    return new SettingsRequest(1250, 1250, EReferenceLevel.MINUS_50, EResolutionBandwidth.ONE_MHZ);
   }
 
   //<editor-fold defaultstate="collapsed" desc="Getter and Setter">
@@ -142,19 +150,19 @@ public class SettingsRequest extends ADatagram {
     this.lnbPower = lnbPower;
   }
 
-  public EAvcomReferenceLevel getReferenceLevel() {
+  public EReferenceLevel getReferenceLevel() {
     return referenceLevel;
   }
 
-  public void setReferenceLevel(EAvcomReferenceLevel referenceLevel) {
+  public void setReferenceLevel(EReferenceLevel referenceLevel) {
     this.referenceLevel = referenceLevel;
   }
 
-  public EAvcomResolutionBandwidth getResolutionBandwidth() {
+  public EResolutionBandwidth getResolutionBandwidth() {
     return resolutionBandwidth;
   }
 
-  public void setResolutionBandwidth(EAvcomResolutionBandwidth resolutionBandwidth) {
+  public void setResolutionBandwidth(EResolutionBandwidth resolutionBandwidth) {
     this.resolutionBandwidth = resolutionBandwidth;
   }
 
@@ -168,7 +176,7 @@ public class SettingsRequest extends ADatagram {
 
   /**
    * Get the (calculated) start frequency for this request
-   * <p>
+   *
    * @return the start frequency for this request
    */
   public double getStartFrequencyMHz() {
@@ -177,7 +185,7 @@ public class SettingsRequest extends ADatagram {
 
   /**
    * Get the (calculated) stop frequency for this request
-   * <p>
+   *
    * @return the start frequency for this request
    */
   public double getStopFrequencyMHz() {
@@ -186,7 +194,7 @@ public class SettingsRequest extends ADatagram {
 
   /**
    * Get an exact copy of this SettingsRequest instance.
-   * <p>
+   *
    * @return a copy of the selected SettingsRequest instance.
    */
   public SettingsRequest copy() {
@@ -196,7 +204,7 @@ public class SettingsRequest extends ADatagram {
   /**
    * Parse the byte array returned from the sensor and use it populate internal
    * fields.
-   * <p>
+   *
    * @param bytes the byte array returned from the sensor
    * @throws java.lang.Exception if the parse operation fails or encounters an
    *                             error
@@ -209,56 +217,72 @@ public class SettingsRequest extends ADatagram {
   }
 
   /**
-   * Convert this datagram into a byte array so it may be sent to the detector
-   * <p>
+   * Convert this datagram into a byte array so it may be sent to the detector.
+   * A Settings datagram (fw >= 2.6) is a 13-byte encoded array:
+   * <pre>
+   * CF-CF-CF-CF-SP-SP-SP-SP-RL-RBW-RFin-LNB-reserved-reserved
+   *  4  5  6  7  8  9 10 11 12  13  14   15     16      17
+   * </pre>
+   *
    * @return a byte array
    */
   @Override
   @SuppressWarnings("ValueOfIncrementOrDecrementUsed")
   public byte[] serialize() {
-// Convert from MHz to Avcom values
+    /**
+     * Convert from MHz to Avcom coded values, then create and populate the byte
+     * array.
+     * <p>
+     * <p>
+     * <p>
+     * CF Bytes = CF(MHz) * 10,000. Max/Min CF value depends upon HW model.
+     * <p>
+     * Span Bytes = Span(MHz) * 10,000. Span range is 0.000 - 1,300.000 MHz.
+     * <p>
+     * RF Input = 10d + RF Input number. i.e. Input #1 is 10d.
+     */
     long centerFrequency = (long) (this.centerFrequencyMHz * 10000);
     long span = (long) (this.spanMHz * 10000);
-    // Create a byte stream
     byte[] b = new byte[SETTINGS_REQUEST_LENGTH + IDatagram.HEADER_SIZE];
     int idx = 0;
-    b[idx++] = IDatagram.FLAG_STX;
-    b[idx++] = 0;
-    b[idx++] = SETTINGS_REQUEST_LENGTH;
-    b[idx++] = EAvcomDatagram.SETTINGS_REQUEST.getByteCode();
-    b[idx++] = (byte) (centerFrequency >>> 24);
-    b[idx++] = (byte) (centerFrequency >>> 16);
-    b[idx++] = (byte) (centerFrequency >>> 8);
-    b[idx++] = (byte) centerFrequency;
-    b[idx++] = (byte) (span >>> 24);
-    b[idx++] = (byte) (span >>> 16);
-    b[idx++] = (byte) (span >>> 8);
-    b[idx++] = (byte) span;
-    b[idx++] = (byte) this.referenceLevel.getByteCode();
-    b[idx++] = (byte) this.resolutionBandwidth.getByteCode();
-    b[idx++] = (byte) (this.inputConnector + 10);
-    b[idx++] = (byte) this.lnbPower;
-    b[b.length - 1] = IDatagram.FLAG_ETX;
+    b[idx++] = IDatagram.STX; //0
+    b[idx++] = 0; //1
+    b[idx++] = SETTINGS_REQUEST_LENGTH; //2
+    b[idx++] = TYPE.getByteCode(); //3
+    b[idx++] = (byte) (centerFrequency >>> 24); //4
+    b[idx++] = (byte) (centerFrequency >>> 16); //5
+    b[idx++] = (byte) (centerFrequency >>> 8); //6
+    b[idx++] = (byte) centerFrequency; //7
+    b[idx++] = (byte) (span >>> 24); //8
+    b[idx++] = (byte) (span >>> 16); //9
+    b[idx++] = (byte) (span >>> 8); //10
+    b[idx++] = (byte) span; //11
+    b[idx++] = (byte) this.referenceLevel.getByteCode(); //12
+    b[idx++] = (byte) this.resolutionBandwidth.getByteCode(); //13
+    b[idx++] = (byte) (this.inputConnector + 10);//14
+    b[idx++] = (byte) this.lnbPower;//15
+    // bytes 16 & 17 are not set.
+    b[b.length - 1] = IDatagram.ETX;
     return b;
   }
 
   /**
    * Return a complete output of this Setting configuration.
-   * <p>
+   *
    * @return a multi-line string.
    */
   public String toStringFull() {
     if (this.isValid()) {
       return "Settings Request Datagram"
-        + "\n name                 value"
-        + "\n --------------------------------"
-        + "\n centerFrequencyMHz:  " + centerFrequencyMHz
-        + "\n spanMHz:             " + spanMHz
-        + "\n referenceLevel:      " + referenceLevel
-        + "\n resolutionBandwidth: " + resolutionBandwidth
-        + "\n inputConnector:      " + inputConnector
-        + "\n lnbPower:            " + lnbPower
-        + "\n byte message:        " + ByteUtil.toString(this.serialize());
+             + "\n name                 value"
+             + "\n --------------------------------"
+             + "\n centerFrequencyMHz:  " + centerFrequencyMHz
+             + "\n spanMHz:             " + spanMHz
+             + "\n referenceLevel:      " + referenceLevel
+             + "\n resolutionBandwidth: " + resolutionBandwidth
+             + "\n inputConnector:      " + inputConnector
+             + "\n lnbPower:            " + lnbPower
+             + "\n byte message:        " + ByteUtility.toString(this.serialize());
     } else {
       return "SettingsRequest: Not initialized. Reference Level & Resolution Bandwidth must be set.";
     }
@@ -268,9 +292,9 @@ public class SettingsRequest extends ADatagram {
   public String toString() {
     if (this.isValid()) {
       return "SET CF [" + centerFrequencyMHz
-        + "] span [" + spanMHz
-        + "] RL [" + referenceLevel
-        + "] RBW [" + resolutionBandwidth + "]";
+             + "] span [" + spanMHz
+             + "] RL [" + referenceLevel
+             + "] RBW [" + resolutionBandwidth + "]";
     } else {
       return "SettingsRequest: Not initialized. Reference Level & Resolution Bandwidth must be set.";
     }

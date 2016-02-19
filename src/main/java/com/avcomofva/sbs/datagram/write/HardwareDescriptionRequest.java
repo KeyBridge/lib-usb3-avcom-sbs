@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2014, Jesse Caulfield <jesse@caulfield.org>
+ * Copyright (c) 2014, Jesse Caulfield
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -26,36 +26,47 @@
 package com.avcomofva.sbs.datagram.write;
 
 import com.avcomfova.sbs.datagram.ADatagram;
-import com.avcomofva.sbs.enumerated.EAvcomDatagram;
+import com.avcomofva.sbs.enumerated.EDatagramType;
 
 /**
- * Avcom Hardware Description Request Datagram. From Table 4: Get HW
- * Description.
+ * Avcom Hardware Description Request Datagram.
  * <p>
- * Get HW Description is recommended to be performed first to determine
- * available control options and operating parameters.
+ * Begin communication with a Avcom SBS board by sending a Get Hardware
+ * Description request to discover basic information about the analyzer such as
+ * Product ID, firmware revision, current Center Frequency, Span, etc.
  * <p>
+ * From Table 4: Get HW Description.
+ *
  * @author Jesse Caulfield
  */
 public class HardwareDescriptionRequest extends ADatagram {
 
   /**
+   * The Datagram type.
+   */
+  private static final EDatagramType TYPE = EDatagramType.HARDWARE_DESCRIPTION_REQUEST;
+  /**
    * A pre-configured message to get the HW description.
    * <p>
-   * Developer note: Avcom documentation says the type bytecode for
-   * HARDWARE_DESCRIPTION_REQUEST is 0x07, which is the same as the
-   * HARDWARE_DESCRIPTION_RESPONSE. This breaks bytecode matching. Since the
-   * hardware never produces a HARDWARE_DESCRIPTION_REQUEST we hard-code it in
-   * the EAvcomDatagram as 0x01 and hard-code it in this
-   * HARDWARE_DESCRIPTION_REQUEST instance as 0x07 to avoid the conflict.
+ Developer note: Avcom documentation says the type bytecode for
+ HARDWARE_DESCRIPTION_REQUEST is 0x07, which is the same as the
+ HARDWARE_DESCRIPTION_RESPONSE. This breaks bytecode matching. Since the
+ hardware never produces a HARDWARE_DESCRIPTION_REQUEST we hard-code it in
+ the EDatagramType as 0x01 and hard-code it in this HARDWARE_DESCRIPTION_REQUEST
+ instance as 0x07 to avoid the conflict.
    */
-  private static final byte[] GET_HARDWARE_DESCRIPTION_REQUEST_MESSAGE = new byte[]{2, 0, 3, 7, 0, 3};
+  private static final byte[] MESSAGE_BYTES = new byte[]{STX,
+                                                         0,
+                                                         3,
+                                                         7, // hard coded
+                                                         0,
+                                                         ETX};
 
   /**
    * Construct a new HardwareDescriptionRequest datagram.
    */
   public HardwareDescriptionRequest() {
-    super(EAvcomDatagram.HARDWARE_DESCRIPTION_REQUEST);
+    super(TYPE);
     this.valid = true;
     this.elapsedTimeMillis = 1;
     this.transactionId = System.currentTimeMillis();
@@ -64,7 +75,7 @@ public class HardwareDescriptionRequest extends ADatagram {
   /**
    * Parse the byte array returned from the sensor and use it populate internal
    * fields.
-   * <p>
+   *
    * @param bytes the byte array returned from the sensor
    * @throws java.lang.Exception if the parse operation fails or encounters an
    *                             error
@@ -78,11 +89,11 @@ public class HardwareDescriptionRequest extends ADatagram {
 
   /**
    * Convert this datagram into a byte array so it may be sent to the detector
-   * <p>
+   *
    * @return a byte array
    */
   @Override
   public byte[] serialize() {
-    return GET_HARDWARE_DESCRIPTION_REQUEST_MESSAGE;
+    return MESSAGE_BYTES;
   }
 }

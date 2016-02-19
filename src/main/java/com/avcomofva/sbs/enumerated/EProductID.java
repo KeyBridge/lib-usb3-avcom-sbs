@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2014, Jesse Caulfield <jesse@caulfield.org>
+ * Copyright (c) 2014, Jesse Caulfield 
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -26,26 +26,54 @@
 package com.avcomofva.sbs.enumerated;
 
 /**
- * Enumerated Avcom ProductID ID byte values and their corresponding product
- * model.
+ * Enumerated Avcom Product descriptions corresponding to defined ID byte
+ * values.
  * <p>
  * From Table 1 & 2: Product ID and PCB Revision
- * <p>
- * @author jesse
+ *
+ * @author Jesse Caulfield
  */
-public enum EAvcomProductID {
+public enum EProductID {
 
+  /**
+   * Software Test Device.
+   */
   DUMMY((byte) 0x1a, "Software Test Device", 2500, 5, -100),
+  /**
+   * AVCom RSA-2150. 930 - 2,500 MHz.
+   */
   RSA2150((byte) 0x3a, "AVCom RSA-2150", 2500, 930, -88),
+  /**
+   * AVCom RSA-1100. 5 - 1,300 MHz and 930 MHz - 2,500 MHz.
+   */
   RSA1100((byte) 0x4a, "AVCom RSA-1100", 2500, 5, -88),
+  /**
+   * AVCom RSA-2500. 5 - 1,300 MHz and 930 MHz - 2,500 MHz.
+   */
   RSA2500((byte) 0x5a, "AVCom RSA-2500", 2500, 5, -88);
+
+  /**
+   * The product ID (byte-code).
+   */
   private final byte byteCode;
+  /**
+   * The Model name.
+   */
   private final String model;
+  /**
+   * The maximum tuning frequency. (MHz)
+   */
   private final double maxFrequency;
+  /**
+   * The minimum tuning frequency. (MHz)
+   */
   private final double minFrequency;
+  /**
+   * The minimum sensitivity. (dBm)
+   */
   private final double minSensitivity;
 
-  private EAvcomProductID(byte code, String label, double maxFrequency, double minFrequency, double minSensivity) {
+  private EProductID(byte code, String label, double maxFrequency, double minFrequency, double minSensivity) {
     this.byteCode = code;
     this.model = label;
     this.maxFrequency = maxFrequency;
@@ -73,8 +101,14 @@ public enum EAvcomProductID {
     return minSensitivity;
   }
 
-  public static EAvcomProductID fromByteCode(byte byteCode) {
-    for (EAvcomProductID eAvcomProductID : EAvcomProductID.values()) {
+  /**
+   * Get a EProductID from the corresponding product ID byte value.
+   *
+   * @param byteCode the product ID byte value.
+   * @return the corresponding EProductID
+   */
+  public static EProductID fromByteCode(byte byteCode) {
+    for (EProductID eAvcomProductID : EProductID.values()) {
       if (eAvcomProductID.getByteCode() == byteCode) {
         return eAvcomProductID;
       }

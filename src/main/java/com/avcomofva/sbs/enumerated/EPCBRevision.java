@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2014, Jesse Caulfield <jesse@caulfield.org>
+ * Copyright (c) 2014, Jesse Caulfield 
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -26,11 +26,13 @@
 package com.avcomofva.sbs.enumerated;
 
 /**
- * Enumerated PCB Revisions. From Table 2: PCB Revision
+ * Enumerated Avcom Product PCB Revisions.
  * <p>
- * @author jesse
+ * From Table 2: PCB Revision
+ *
+ * @author Jesse Caulfield
  */
-public enum EAvcomPCBRevision {
+public enum EPCBRevision {
 
   // PBC Revisions by Byte
   FAB08D02RevA1((byte) 0x41, "FAB-08D02 Revision A1"),
@@ -48,26 +50,32 @@ public enum EAvcomPCBRevision {
   UNKNOWN((byte) 0xFF, "Unrecognized"),
   DUMMY((byte) 0xDD, "Software Dummy Adapter");
 
-  private final byte code;
+  /**
+   * The Product PCB Revision (byte-code).
+   */
+  private final byte byteCode;
+  /**
+   * A human readable label / description.
+   */
   private final String label;
 
-  private EAvcomPCBRevision(byte code, String label) {
-    this.code = code;
+  private EPCBRevision(byte code, String label) {
+    this.byteCode = code;
     this.label = label;
   }
 
   /**
    * The PCB board revision byte code.
-   * <p>
+   *
    * @return a byte value
    */
   public byte getByteCode() {
-    return this.code;
+    return this.byteCode;
   }
 
   /**
    * The PCB board revision label
-   * <p>
+   *
    * @return a string label value
    */
   public String getLabel() {
@@ -75,13 +83,13 @@ public enum EAvcomPCBRevision {
   }
 
   /**
-   * Get a product from its byte code
-   * <p>
-   * @param byteCode
-   * @return
+   * Get a Product PCB Revision from its byte code
+   *
+   * @param byteCode the byte-code value
+   * @return the Product PCB Revision
    */
-  public static EAvcomPCBRevision fromByteCode(byte byteCode) {
-    for (EAvcomPCBRevision eAvcomPCBRevision : EAvcomPCBRevision.values()) {
+  public static EPCBRevision fromByteCode(byte byteCode) {
+    for (EPCBRevision eAvcomPCBRevision : EPCBRevision.values()) {
       if (eAvcomPCBRevision.getByteCode() == byteCode) {
         return eAvcomPCBRevision;
       }
@@ -89,29 +97,4 @@ public enum EAvcomPCBRevision {
     return null;
   }
 
-  /**
-   * Get a product from its label
-   * <p>
-   * @param label
-   * @return
-   */
-  public static EAvcomPCBRevision fromLabel(String label) {
-    for (EAvcomPCBRevision eAvcomPCBRevision : EAvcomPCBRevision.values()) {
-      if (eAvcomPCBRevision.getLabel().equalsIgnoreCase(label)) {
-        return eAvcomPCBRevision;
-      }
-    }
-    return null;
-  }
-
-  /**
-   * Get a product label from its byte code
-   * <p>
-   * @param byteCode
-   * @return
-   */
-  public static String labelFromBytecode(byte byteCode) {
-    EAvcomPCBRevision rev = fromByteCode(byteCode);
-    return rev != null ? rev.getLabel() : "Unrecognized PCB Board Revision [" + Integer.toHexString(byteCode) + "]";
-  }
 }

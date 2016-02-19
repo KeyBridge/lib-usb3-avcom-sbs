@@ -11,8 +11,9 @@
  * A copy of these agreements may be obtained by sending a request
  * via email to info@caufield.org.
  */
-package ch.keybridge.sensor.util;
+package com.avcomofva.utility;
 
+import com.avcomofva.utility.SoftwareDescription;
 import java.util.Iterator;
 import java.util.Map;
 import org.junit.Test;
