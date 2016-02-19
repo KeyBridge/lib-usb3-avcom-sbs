@@ -28,7 +28,7 @@ package com.avcomofva.sbs.datagram.read;
 import com.avcomfova.sbs.datagram.ADatagram;
 import com.avcomofva.sbs.enumerated.EDatagramType;
 import java.util.Arrays;
-import javax.usb.utility.ByteUtility;
+import javax.usb3.utility.ByteUtility;
 
 /**
  * Avcom Error Response message. (Table 16: Error Message.)

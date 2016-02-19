@@ -34,14 +34,14 @@ import com.ftdichip.usb.enumerated.ELineParity;
 import com.ftdichip.usb.enumerated.ELineStopbits;
 import java.util.ArrayList;
 import java.util.List;
-import javax.usb.IUsbDevice;
-import javax.usb.IUsbHub;
-import javax.usb.IUsbServices;
-import javax.usb.UsbHostManager;
-import static javax.usb.enumerated.EEndpointDirection.HOST_TO_DEVICE;
-import javax.usb.exception.UsbException;
-import javax.usb.request.BMRequestType;
-import javax.usb.utility.ByteUtility;
+import javax.usb3.IUsbDevice;
+import javax.usb3.IUsbHub;
+import javax.usb3.IUsbServices;
+import javax.usb3.UsbHostManager;
+import static javax.usb3.enumerated.EEndpointDirection.HOST_TO_DEVICE;
+import javax.usb3.exception.UsbException;
+import javax.usb3.request.BMRequestType;
+import javax.usb3.utility.ByteUtility;
 import org.junit.Test;
 
 /**

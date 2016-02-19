@@ -37,11 +37,11 @@ import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
 import java.util.Map;
-import javax.usb.IUsbDevice;
-import javax.usb.IUsbHub;
-import javax.usb.IUsbServices;
-import javax.usb.UsbHostManager;
-import javax.usb.exception.UsbException;
+import javax.usb3.IUsbDevice;
+import javax.usb3.IUsbHub;
+import javax.usb3.IUsbServices;
+import javax.usb3.UsbHostManager;
+import javax.usb3.exception.UsbException;
 import org.junit.Test;
 
 /**

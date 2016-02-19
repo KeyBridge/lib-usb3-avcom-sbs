@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2014, Jesse Caulfield 
+ * Copyright (c) 2014, Jesse Caulfield
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -27,7 +27,7 @@ package com.avcomofva.sbs;
 
 import com.avcomofva.sbs.datagram.read.HardwareDescriptionResponse;
 import com.avcomofva.sbs.enumerated.EDatagramType;
-import javax.usb.utility.ByteUtility;
+import javax.usb3.utility.ByteUtility;
 import org.junit.Test;
 
 /**

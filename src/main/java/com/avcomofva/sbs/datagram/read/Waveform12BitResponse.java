@@ -32,7 +32,7 @@ import com.avcomofva.sbs.enumerated.EReferenceLevel;
 import com.avcomofva.sbs.enumerated.EResolutionBandwidth;
 import java.util.Map;
 import java.util.TreeMap;
-import javax.usb.utility.ByteUtility;
+import javax.usb3.utility.ByteUtility;
 
 /**
  * Waveform Response Datagram from Avcom devices 12-bit waveform packet. Table

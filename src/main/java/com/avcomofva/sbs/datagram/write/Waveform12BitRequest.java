@@ -28,7 +28,7 @@ package com.avcomofva.sbs.datagram.write;
 import com.avcomfova.sbs.datagram.ADatagram;
 import com.avcomofva.sbs.enumerated.EDatagramType;
 import com.avcomofva.sbs.enumerated.EStreamingType;
-import javax.usb.utility.ByteUtility;
+import javax.usb3.utility.ByteUtility;
 
 /**
  * Avcom 12-bit Waveform Datagram (Firmware >= v2.10). From Table 6: Waveform

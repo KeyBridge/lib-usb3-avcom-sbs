@@ -30,7 +30,7 @@ import com.avcomfova.sbs.datagram.IDatagram;
 import com.avcomofva.sbs.enumerated.EDatagramType;
 import com.avcomofva.sbs.enumerated.EReferenceLevel;
 import com.avcomofva.sbs.enumerated.EResolutionBandwidth;
-import javax.usb.utility.ByteUtility;
+import javax.usb3.utility.ByteUtility;
 
 /**
  * Change Settings Request Datagram for Avcom devices. From Table 12: Change

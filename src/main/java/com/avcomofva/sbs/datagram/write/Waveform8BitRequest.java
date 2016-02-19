@@ -29,7 +29,7 @@ import com.avcomfova.sbs.datagram.ADatagram;
 import com.avcomofva.sbs.datagram.read.Waveform8BitResponse;
 import com.avcomofva.sbs.enumerated.EDatagramType;
 import com.avcomofva.sbs.enumerated.EStreamingType;
-import javax.usb.utility.ByteUtility;
+import javax.usb3.utility.ByteUtility;
 
 /**
  * Avcom 8-bit Waveform Datagram (Firmware >= v1.9).

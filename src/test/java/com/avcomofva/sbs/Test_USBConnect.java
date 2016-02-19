@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2014, Jesse Caulfield 
+ * Copyright (c) 2014, Jesse Caulfield
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -26,10 +26,10 @@
 package com.avcomofva.sbs;
 
 import java.util.List;
-import javax.usb.*;
-import javax.usb.exception.UsbDisconnectedException;
-import javax.usb.exception.UsbException;
-import javax.usb.exception.UsbNotActiveException;
+import javax.usb3.*;
+import javax.usb3.exception.UsbDisconnectedException;
+import javax.usb3.exception.UsbException;
+import javax.usb3.exception.UsbNotActiveException;
 import org.junit.Test;
 
 /**
@@ -41,7 +41,8 @@ public class Test_USBConnect {
   @Test
   public void test() throws Exception {
 
-    IUsbDevice iUsbDevice = null;
+    IUsbDevice iUsbDevice = new Test_FTDI().findAvcomIUsbDevice();
+//    IUsbDevice iUsbDevice = null;
     for (IUsbConfiguration iUsbConfiguration : iUsbDevice.getUsbConfigurations()) {
       System.out.println("config " + iUsbConfiguration);
     }
@@ -56,7 +57,7 @@ public class Test_USBConnect {
     IUsbConfiguration configuration = iUsbDevice.getActiveUsbConfiguration();
 //    UsbConfiguration configuration = iUsbDevice.getUsbConfiguration((byte) 1);
     System.out.println("active config " + configuration);
-    IUsbInterface iUsbInterface = (IUsbInterface) configuration.getUsbInterfaces().get(0);
+    IUsbInterface iUsbInterface = (IUsbInterface) configuration.getUsbInterfaces().iterator().next();
     System.out.println("usb interface " + iUsbInterface);
 
 //    IUsbInterface iUsbInterface = configuration.getIUsbInterface((byte) 0);

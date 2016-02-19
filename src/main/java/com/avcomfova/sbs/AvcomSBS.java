@@ -51,8 +51,8 @@ import java.util.concurrent.ConcurrentMap;
 import java.util.concurrent.ConcurrentSkipListMap;
 import java.util.logging.Level;
 import java.util.logging.Logger;
-import javax.usb.exception.UsbException;
-import javax.usb.utility.ByteUtility;
+import javax.usb3.exception.UsbException;
+import javax.usb3.utility.ByteUtility;
 
 /**
  * Sensor implementation supporting the Avcom SBS single-board-sensor platform.
@@ -136,7 +136,7 @@ public class AvcomSBS implements Runnable {
    * frequency (MHz) as a key. An interface is required in this map since the
    * READ method does not return type-specific datagram instances.
    */
-  private static final ConcurrentMap<Double, IDatagram> traceDatagramQueue = new ConcurrentSkipListMap<>();
+  private static final ConcurrentMap<Double, IDatagram> WAVEFORM_QUEUE = new ConcurrentSkipListMap<>();
   /**
    * Tread helper flag to indicate that new settings have been requested and any
    * current scans (especially a wide-band scan) should be immediately
@@ -690,7 +690,7 @@ public class AvcomSBS implements Runnable {
         /**
          * Clear the datagram queue to be filled with new entries.
          */
-        traceDatagramQueue.clear();
+        WAVEFORM_QUEUE.clear();
         for (Map.Entry<Double, SettingsRequest> settingsEntry : SETTINGS_REQUEST_QUEUE.entrySet()) {
           /**
            * Write the SettingsRequest, then immediately request and read a new
@@ -716,7 +716,7 @@ public class AvcomSBS implements Runnable {
            * ensure it is not null and is actually a TraceResponse.
            */
           if (datagram instanceof Waveform8BitResponse) {
-            traceDatagramQueue.put(settingsEntry.getKey(), datagram);
+            WAVEFORM_QUEUE.put(settingsEntry.getKey(), datagram);
             hardwareDescription.setElapsedTime(datagram.getElapsedTime());
           } else if (datagram instanceof ErrorResponse) {
             hardwareDescription.setDatagramError();
@@ -726,7 +726,7 @@ public class AvcomSBS implements Runnable {
            * Update the percent complete. This is used to provide user interface
            * progress and feedback.
            */
-          percentComplete = (double) traceDatagramQueue.size() / (double) SETTINGS_REQUEST_QUEUE.size();
+          percentComplete = (double) WAVEFORM_QUEUE.size() / (double) SETTINGS_REQUEST_QUEUE.size();
           /**
            * Fire a progress change event. This is picked up by any UI widgets
            * watching this instance.
@@ -748,7 +748,7 @@ public class AvcomSBS implements Runnable {
              * Clear the datagram queue of all trace entries with the previous
              * settings.
              */
-            traceDatagramQueue.clear();
+            WAVEFORM_QUEUE.clear();
             /**
              * Break out of the current FOR loop and start a new one with the
              * new settings.
@@ -760,7 +760,7 @@ public class AvcomSBS implements Runnable {
          * Assemble a final Trace from the collected Trace Data Queue.
          */
         Waveform traceDatagram = Waveform.getInstance(settingsRequest);
-        for (Map.Entry<Double, IDatagram> entry : traceDatagramQueue.entrySet()) {
+        for (Map.Entry<Double, IDatagram> entry : WAVEFORM_QUEUE.entrySet()) {
           traceDatagram.addData((Waveform8BitResponse) entry.getValue());
         }
         /**
