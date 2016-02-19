@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2014, Jesse Caulfield <jesse@caulfield.org>
+ * Copyright (c) 2014, Jesse Caulfield
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -25,18 +25,18 @@
  */
 package com.avcomfova.sbs.datagram;
 
+import com.avcomofva.sbs.datagram.read.ErrorResponse;
 import com.avcomofva.sbs.datagram.read.HardwareDescriptionResponse;
-import com.avcomofva.sbs.datagram.read.TraceResponse;
-import com.avcomofva.sbs.datagram.read.TraceResponse12Bit;
-import com.avcomofva.sbs.enumerated.EAvcomDatagram;
+import com.avcomofva.sbs.datagram.read.Waveform8BitResponse;
+import com.avcomofva.sbs.enumerated.EDatagramType;
 
 /**
  * A helper utility class to quickly identify and parse Avcom datagram bytes
  * into a useful datagram instance.
- * <p>
+ *
  * @author Jesse Caulfield
  */
-public class Datagrams {
+public class Datagram {
 
   /**
    * Utility method to get and build an Avcom datagram instance from a raw data
@@ -45,7 +45,7 @@ public class Datagrams {
    * <p>
    * The returned interface will likely need to be casted to gain access to its
    * type-specific methods and fields.
-   * <p>
+   *
    * @param data the Avcom datagram raw byte array. This will be inspected and
    *             parsed
    * @return an Avcom IDatagram instance
@@ -54,39 +54,37 @@ public class Datagrams {
    */
   public static IDatagram getInstance(byte[] data) throws Exception {
     if (data == null) {
-      throw new Exception("Null Avcom datagram data");
+      throw new Exception("Null data error.");
     }
     /**
      * The datagram type is always at byte address 3.
      */
-    EAvcomDatagram avcomDatagram = EAvcomDatagram.fromByteCode(data[3]);
-    if (avcomDatagram != null) {
-      switch (avcomDatagram) {
-        case HARDWARE_DESCRIPTION_REQUEST:
-        case LNB_DESCRIPTION_REQUEST:
-        case SETTINGS_REQUEST:
-        case TRACE_REQUEST:
-        case TRACE_REQUEST_12BIT:
-          /**
-           * No op for request types.
-           */
-          break;
-        case ERROR_RESPONSE:
-        case LNB_DESCRIPTION_RESPONSE:
-        case RESERVED_RESPONSE:
-        case TRACE_DATAGRAM:
-          throw new UnsupportedOperationException(avcomDatagram + " not supported yet.");
-
-        case HARDWARE_DESCRIPTION_RESPONSE:
-          return new HardwareDescriptionResponse(data);
-        case TRACE_RESPONSE:
-          return new TraceResponse(data);
-        case TRACE_RESPONSE_12BIT:
-          return new TraceResponse12Bit(data);
-        default:
-          throw new AssertionError(avcomDatagram.name());
-
-      }
+    EDatagramType datagramType = EDatagramType.fromByteCode(data[3]);
+    /**
+     * No op for request types.
+     */
+    switch (datagramType) {
+      case HARDWARE_DESCRIPTION_REQUEST:
+      case LNB_DESCRIPTION_REQUEST:
+      case SETTINGS_REQUEST:
+      case WAVEFORM_8BIT_REQUEST:
+      case WAVEFORM_12BIT_REQUEST:
+        break;
+      case LNB_DESCRIPTION_RESPONSE:
+      case RESERVED_RESPONSE:
+      case WAVEFORM:
+        throw new UnsupportedOperationException(datagramType + " not yet implemented.");
+      case ERROR_RESPONSE:
+        return new ErrorResponse(data);
+      case HARDWARE_DESCRIPTION_RESPONSE:
+        return new HardwareDescriptionResponse(data);
+      case WAVEFORM_8BIT_RESPONSE:
+        return new Waveform8BitResponse(data);
+      case WAVEFORM_12BIT_RESPONSE:
+        throw new UnsupportedOperationException(datagramType + " not yet implemented.");
+//          return new Waveform12BitResponse(data);
+      default:
+        throw new AssertionError(datagramType.name());
     }
     throw new Exception("Unrecognized Avcom datagram type : [" + data[3] + "]");
   }
