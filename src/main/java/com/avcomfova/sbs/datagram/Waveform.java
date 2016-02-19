@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2014, Jesse Caulfield <jesse@caulfield.org>
+ * Copyright (c) 2014, Jesse Caulfield
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -25,23 +25,23 @@
  */
 package com.avcomfova.sbs.datagram;
 
-import com.avcomofva.sbs.datagram.read.TraceResponse;
+import com.avcomofva.sbs.datagram.read.Waveform8BitResponse;
 import com.avcomofva.sbs.datagram.write.SettingsRequest;
-import com.avcomofva.sbs.enumerated.EAvcomDatagram;
-import com.avcomofva.sbs.enumerated.EAvcomProductID;
-import com.avcomofva.sbs.enumerated.EAvcomReferenceLevel;
-import com.avcomofva.sbs.enumerated.EAvcomResolutionBandwidth;
+import com.avcomofva.sbs.enumerated.EDatagramType;
+import com.avcomofva.sbs.enumerated.EProductID;
+import com.avcomofva.sbs.enumerated.EReferenceLevel;
+import com.avcomofva.sbs.enumerated.EResolutionBandwidth;
 import java.util.Map;
 import java.util.TreeMap;
 
 /**
- * An extended Trace data container used to exchange spectrum trace data
- * received from Avcom sensors. This TraceDatagram supports serialization and
- * arbitrary trace size.
- * <p>
+ * An extended Waveform data container used to exchange spectrum trace data
+ * received from Avcom sensors. This Waveform supports serialization and
+ * arbitrary sample size.
+ *
  * @author Jesse Caulfield
  */
-public class TraceDatagram extends ADatagram {
+public class Waveform extends ADatagram {
 
   /**
    * Indicator that the sensor detect saturation somewhere within the trace.
@@ -50,79 +50,79 @@ public class TraceDatagram extends ADatagram {
   /**
    * The Avcom product ID that produced this data.
    */
-  private EAvcomProductID productId;
+  private EProductID productId;
   /**
    * The sweep center frequency MHz.
    */
-  private double centerFrequencyMHz;
+  private double centerFrequency;
   /**
    * The sweep span (MHz)
    */
-  private double spanMHz;
+  private double span;
   /**
    * The sweep reference level (dBm)
    */
-  private EAvcomReferenceLevel referenceLevel;
+  private EReferenceLevel referenceLevel;
   /**
    * The sweep resolution bandwidth (enumerated) (MHz)
    */
-  private EAvcomResolutionBandwidth resolutionBandwidth;
+  private EResolutionBandwidth resolutionBandwidth;
   /**
    * A map of center frequency (MHz) vs. power level (dBm).
    */
   private final Map<Double, Double> traceData;
 
-  public TraceDatagram() {
-    super(EAvcomDatagram.TRACE_DATAGRAM);
+  public Waveform() {
+    super(EDatagramType.WAVEFORM);
     this.traceData = new TreeMap<>();
   }
 
   /**
-   * Build and return a new TraceDatagram instance with center frequency and
-   * span values from an input SettingsRequest instance. This is used when
-   * assembling a TraceDatagram from multiple TraceResponse instances that are
-   * generated from a single wide-band SettingsRequest that was split into
-   * multiple requests.
+   * Build and return a new Waveform instance with center frequency and span
+   * values from an input SettingsRequest instance. This is used when assembling
+   * a Waveform from multiple Waveform8BitResponse instances that are generated
+   * from a single wide-band SettingsRequest that was split into multiple
+   * requests.
    * <p>
-   * To be useful the component TraceResponses must be added to the
-   * TraceDatagram returned by this method.
-   * <p>
+   * To be useful the component TraceResponses must be added to the Waveform
+   * returned by this method.
+   *
    * @param settingsRequest the settings request instance to copy values from.
-   * @return an empty TraceDatagram instance.
+   * @return an empty Waveform instance.
    */
-  public static TraceDatagram getInstance(SettingsRequest settingsRequest) {
-    TraceDatagram traceDatagram = new TraceDatagram();
-    traceDatagram.centerFrequencyMHz = settingsRequest.getCenterFrequencyMHz();
-    traceDatagram.spanMHz = settingsRequest.getSpanMHz();
+  public static Waveform getInstance(SettingsRequest settingsRequest) {
+    Waveform traceDatagram = new Waveform();
+    traceDatagram.centerFrequency = settingsRequest.getCenterFrequencyMHz();
+    traceDatagram.span = settingsRequest.getSpanMHz();
     traceDatagram.transactionId = settingsRequest.getTransactionId();
     return traceDatagram;
   }
 
   //<editor-fold defaultstate="collapsed" desc="Getter Methods">
-  public double getCenterFrequencyMHz() {
-    return centerFrequencyMHz;
+  public double getCenterFrequency() {
+    return centerFrequency;
   }
 
-  public EAvcomProductID getProductId() {
+  public EProductID getProductId() {
     return productId;
   }
 
-  public EAvcomReferenceLevel getReferenceLevel() {
+  public EReferenceLevel getReferenceLevel() {
     return referenceLevel;
   }
 
-  public EAvcomResolutionBandwidth getResolutionBandwidth() {
+  public EResolutionBandwidth getResolutionBandwidth() {
     return resolutionBandwidth;
   }
 
-  public double getSpanMHz() {
-    return spanMHz;
+  public double getSpan() {
+    return span;
   }
 
   /**
    * Get a copy of the internal Trace data. Trace data is presented as a sorted
    * map of center frequency (MHz) vs. power level (dBm).
-   * <p>
+   *
    * @return a non-null TreeMap instance.
    */
   public Map<Double, Double> getTraceData() {
@@ -134,17 +134,17 @@ public class TraceDatagram extends ADatagram {
   }//</editor-fold>
 
   /**
-   * Add data from a TraceResponse into this TraceDatagram instance. The data,
+   * Add data from a Waveform8BitResponse into this Waveform instance. The data,
    * reference level, resolutionBandwidth and saturated state are initialized
    * from the first datagram added. All subsequent datagrams must match the
    * first datagram reference level, resolutionBandwidth and product ID.
-   * <p>
-   * @param datagram the TraceResponse datagram to import
+   *
+   * @param datagram the Waveform8BitResponse datagram to import
    * @throws java.lang.Exception if the datagram configuration does not match
-   *                             the TraceDatagram configuration (RBW, RL and
-   *                             Product ID)
+   *                             the Waveform configuration (RBW, RL and Product
+   *                             ID)
    */
-  public void addData(TraceResponse datagram) throws Exception {
+  public void addData(Waveform8BitResponse datagram) throws Exception {
     /**
      * Set the configuration values from the first datagram. All subsequent
      * datagram configurations must match.
@@ -172,7 +172,7 @@ public class TraceDatagram extends ADatagram {
     /**
      * Add the elapsed time to the current elapsed time.
      */
-    this.elapsedTimeMillis += datagram.getElapsedTimeMillis();
+    this.elapsedTimeMillis += datagram.getElapsedTime();
     /**
      * Add all the datagram data. This may overwrite some values but that is OK.
      */
@@ -187,7 +187,7 @@ public class TraceDatagram extends ADatagram {
   /**
    * Parse the byte array returned from the sensor and use it populate internal
    * fields.
-   * <p>
+   *
    * @param bytes the byte array returned from the sensor
    * @throws java.lang.Exception if the parse operation fails or encounters an
    *                             error
@@ -205,15 +205,15 @@ public class TraceDatagram extends ADatagram {
   public String toStringFull() {
     if (valid) {
       return "Trace Datagram"
-        + "\n name                    value"
-        + "\n --------------------------------"
-        + "\n datagramType           " + datagramType
-        + "\n elapsedTimeMillis      " + elapsedTimeMillis
-        + "\n data length            " + traceData.size()
-        + "\n centerFrequency MHz    " + centerFrequencyMHz
-        + "\n span MHz               " + spanMHz
-        + "\n referenceLevel         " + referenceLevel
-        + "\n resolutionBandwidth    " + resolutionBandwidth;
+             + "\n name                    value"
+             + "\n --------------------------------"
+             + "\n datagramType           " + type
+             + "\n elapsedTimeMillis      " + elapsedTimeMillis
+             + "\n data length            " + traceData.size()
+             + "\n centerFrequency MHz    " + centerFrequency
+             + "\n span MHz               " + span
+             + "\n referenceLevel         " + referenceLevel
+             + "\n resolutionBandwidth    " + resolutionBandwidth;
     } else {
       return "Trace Datagram not initialized.";
     }
@@ -222,12 +222,12 @@ public class TraceDatagram extends ADatagram {
   @Override
   public String toString() {
     if (valid) {
-      return "TRACE: CF [" + centerFrequencyMHz
-        + "] Span [" + spanMHz
-        + "] RL [" + referenceLevel
-        + "] RBW [" + resolutionBandwidth
-        + "] DATA [" + traceData.size() + " bytes"
-        + "]";
+      return "TRACE: CF [" + centerFrequency
+             + "] Span [" + span
+             + "] RL [" + referenceLevel
+             + "] RBW [" + resolutionBandwidth
+             + "] DATA [" + traceData.size() + " bytes"
+             + "]";
     } else {
       return "Trace Datagram not initialized.";
     }
