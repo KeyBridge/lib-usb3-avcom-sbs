@@ -69,7 +69,9 @@ public class Test_AvcomSBS implements IDatagramListener {
 
     System.out.println("\nTest AvcomSBS at " + iUsbDeviceList.iterator().next());
 
-    AvcomSBS avcom = new AvcomSBS(new FTDI(iUsbDeviceList.iterator().next()));
+    FTDI ftdi = new FTDI(iUsbDeviceList.iterator().next());
+
+    AvcomSBS avcom = new AvcomSBS(ftdi);
     avcom.addListener(test);
     avcom.setSettings(new SettingsRequest(1250, 2500, EReferenceLevel.MINUS_10, EResolutionBandwidth.ONE_MHZ));
 
@@ -92,6 +94,9 @@ public class Test_AvcomSBS implements IDatagramListener {
     }
 
     System.out.println("\nTest AvcomSBS DONE");
+
+    // rlease the ftdi port for other tests
+    ftdi.close();
   }
 
   /**

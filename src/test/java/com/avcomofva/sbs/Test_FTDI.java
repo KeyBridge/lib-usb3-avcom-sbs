@@ -90,6 +90,9 @@ public class Test_FTDI {
       }
     }
 
+    // release the port for more tests.
+    ftdi.close();
+
 //    ftdi.setDtr(false);
   }
 
