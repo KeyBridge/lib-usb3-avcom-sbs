@@ -26,7 +26,7 @@
 package com.avcomofva.sbs.datagram.write;
 
 import com.avcomfova.sbs.datagram.ADatagram;
-import com.avcomofva.sbs.enumerated.EDatagramType;
+import com.avcomofva.sbs.enumerated.DatagramType;
 
 /**
  * Avcom Hardware Description Request Datagram.
@@ -44,7 +44,7 @@ public class HardwareDescriptionRequest extends ADatagram {
   /**
    * The Datagram type.
    */
-  private static final EDatagramType TYPE = EDatagramType.HARDWARE_DESCRIPTION_REQUEST;
+  private static final DatagramType TYPE = DatagramType.HARDWARE_DESCRIPTION_REQUEST;
   /**
    * A pre-configured message to get the HW description.
    * <p>
@@ -52,7 +52,7 @@ public class HardwareDescriptionRequest extends ADatagram {
  HARDWARE_DESCRIPTION_REQUEST is 0x07, which is the same as the
  HARDWARE_DESCRIPTION_RESPONSE. This breaks bytecode matching. Since the
  hardware never produces a HARDWARE_DESCRIPTION_REQUEST we hard-code it in
- the EDatagramType as 0x01 and hard-code it in this HARDWARE_DESCRIPTION_REQUEST
+ the DatagramType as 0x01 and hard-code it in this HARDWARE_DESCRIPTION_REQUEST
  instance as 0x07 to avoid the conflict.
    */
   private static final byte[] MESSAGE_BYTES = new byte[]{STX,

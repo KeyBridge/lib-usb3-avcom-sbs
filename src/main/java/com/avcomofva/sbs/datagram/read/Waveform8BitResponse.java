@@ -26,10 +26,10 @@
 package com.avcomofva.sbs.datagram.read;
 
 import com.avcomfova.sbs.datagram.ADatagram;
-import com.avcomofva.sbs.enumerated.EDatagramType;
-import com.avcomofva.sbs.enumerated.EProductID;
-import com.avcomofva.sbs.enumerated.EReferenceLevel;
-import com.avcomofva.sbs.enumerated.EResolutionBandwidth;
+import com.avcomofva.sbs.enumerated.DatagramType;
+import com.avcomofva.sbs.enumerated.ProductID;
+import com.avcomofva.sbs.enumerated.ReferenceLevel;
+import com.avcomofva.sbs.enumerated.ResolutionBandwidth;
 import java.util.Map;
 import java.util.TreeMap;
 import javax.usb3.utility.ByteUtility;
@@ -46,7 +46,7 @@ public class Waveform8BitResponse extends ADatagram {
   /**
    * The Datagram type.
    */
-  private static final EDatagramType TYPE = EDatagramType.WAVEFORM_8BIT_RESPONSE;
+  private static final DatagramType TYPE = DatagramType.WAVEFORM_8BIT_RESPONSE;
   /**
    * The datagram length (0x0155 = 341 bytes).
    * <p>
@@ -76,7 +76,7 @@ public class Waveform8BitResponse extends ADatagram {
   /**
    * The Product ID. Byte #324.
    */
-  private EProductID productId;
+  private ProductID productId;
   /**
    * The center frequency (MHz). Byte #325-328.
    */
@@ -88,11 +88,11 @@ public class Waveform8BitResponse extends ADatagram {
   /**
    * The sensor reference level. Byte #333
    */
-  private EReferenceLevel referenceLevel;
+  private ReferenceLevel referenceLevel;
   /**
    * The waveform resolution bandwidth. Byte #334.
    */
-  private EResolutionBandwidth resolutionBandwidth;
+  private ResolutionBandwidth resolutionBandwidth;
   /**
    * The sensor input connector. Byte #335.
    */
@@ -158,15 +158,15 @@ public class Waveform8BitResponse extends ADatagram {
     return lnbPower;
   }
 
-  public EProductID getProductId() {
+  public ProductID getProductId() {
     return productId;
   }
 
-  public EReferenceLevel getReferenceLevel() {
+  public ReferenceLevel getReferenceLevel() {
     return referenceLevel;
   }
 
-  public EResolutionBandwidth getResolutionBandwidth() {
+  public ResolutionBandwidth getResolutionBandwidth() {
     return resolutionBandwidth;
   }
 
@@ -188,11 +188,11 @@ public class Waveform8BitResponse extends ADatagram {
    */
   @Override
   public void parse(byte[] bytes) throws Exception {
-    this.productId = EProductID.fromByteCode(bytes[324]);
+    this.productId = ProductID.fromByteCode(bytes[324]);
     this.centerFrequency = ByteUtility.intFrom4Bytes(bytes, 325) / 10000;
     this.span = ByteUtility.intFrom4Bytes(bytes, 329) / 10000;
-    this.referenceLevel = EReferenceLevel.fromByteCode(bytes[333]);
-    this.resolutionBandwidth = EResolutionBandwidth.fromByteCode(bytes[334]);
+    this.referenceLevel = ReferenceLevel.fromByteCode(bytes[333]);
+    this.resolutionBandwidth = ResolutionBandwidth.fromByteCode(bytes[334]);
     this.inputConnector = bytes[335] - 9;
     for (int i = 0; i < 2; i++) {
       this.internalExtender[i] = bytes[336 + i];

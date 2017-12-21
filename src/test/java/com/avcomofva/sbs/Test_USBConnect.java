@@ -30,7 +30,6 @@ import javax.usb3.*;
 import javax.usb3.exception.UsbDisconnectedException;
 import javax.usb3.exception.UsbException;
 import javax.usb3.exception.UsbNotActiveException;
-import org.junit.Test;
 
 /**
  *
@@ -38,7 +37,7 @@ import org.junit.Test;
  */
 public class Test_USBConnect {
 
-  @Test
+//  @Test
   public void test() throws Exception {
 
     IUsbDevice iUsbDevice = new Test_FTDI().findAvcomIUsbDevice();

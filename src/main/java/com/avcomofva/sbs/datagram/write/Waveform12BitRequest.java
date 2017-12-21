@@ -26,8 +26,8 @@
 package com.avcomofva.sbs.datagram.write;
 
 import com.avcomfova.sbs.datagram.ADatagram;
-import com.avcomofva.sbs.enumerated.EDatagramType;
-import com.avcomofva.sbs.enumerated.EStreamingType;
+import com.avcomofva.sbs.enumerated.DatagramType;
+import com.avcomofva.sbs.enumerated.StreamingType;
 import javax.usb3.utility.ByteUtility;
 
 /**
@@ -44,7 +44,7 @@ public class Waveform12BitRequest extends ADatagram {
   /**
    * The Datagram type.
    */
-  private static final EDatagramType TYPE = EDatagramType.WAVEFORM_12BIT_REQUEST;
+  private static final DatagramType TYPE = DatagramType.WAVEFORM_12BIT_REQUEST;
   /**
    * A pre-configured message to get a single 12-bit trace. This places value 5
    * at byte position 4. See Table 6 for byte order configuration.
@@ -53,7 +53,7 @@ public class Waveform12BitRequest extends ADatagram {
                                                          0,
                                                          3,
                                                          TYPE.getByteCode(),
-                                                         EStreamingType.SEND_12BIT,
+                                                         StreamingType.SEND_12BIT,
                                                          ETX};
 
   public Waveform12BitRequest() {

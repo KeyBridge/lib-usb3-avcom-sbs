@@ -27,9 +27,9 @@ package com.avcomofva.sbs.datagram.write;
 
 import com.avcomfova.sbs.datagram.ADatagram;
 import com.avcomfova.sbs.datagram.IDatagram;
-import com.avcomofva.sbs.enumerated.EDatagramType;
-import com.avcomofva.sbs.enumerated.EReferenceLevel;
-import com.avcomofva.sbs.enumerated.EResolutionBandwidth;
+import com.avcomofva.sbs.enumerated.DatagramType;
+import com.avcomofva.sbs.enumerated.ReferenceLevel;
+import com.avcomofva.sbs.enumerated.ResolutionBandwidth;
 import javax.usb3.utility.ByteUtility;
 
 /**
@@ -45,7 +45,7 @@ public class SettingsRequest extends ADatagram {
   /**
    * The Datagram type.
    */
-  private static final EDatagramType TYPE = EDatagramType.SETTINGS_REQUEST;
+  private static final DatagramType TYPE = DatagramType.SETTINGS_REQUEST;
   /**
    * 10 bytes. The length of a Change Settings Message.
    * <p>
@@ -65,11 +65,11 @@ public class SettingsRequest extends ADatagram {
   /**
    * The new reference level (dB)
    */
-  private EReferenceLevel referenceLevel;
+  private ReferenceLevel referenceLevel;
   /**
    * The new resolution bandwidth (MHz)
    */
-  private EResolutionBandwidth resolutionBandwidth;
+  private ResolutionBandwidth resolutionBandwidth;
   /**
    * The sensor input connector.
    * <p>
@@ -104,7 +104,7 @@ public class SettingsRequest extends ADatagram {
    * @param referenceLevel      The new reference level (dB)
    * @param resolutionBandwidth The new resolution bandwidth (MHz)
    */
-  public SettingsRequest(double centerFrequencyMHz, double spanMHz, EReferenceLevel referenceLevel, EResolutionBandwidth resolutionBandwidth) {
+  public SettingsRequest(double centerFrequencyMHz, double spanMHz, ReferenceLevel referenceLevel, ResolutionBandwidth resolutionBandwidth) {
     this();
     this.centerFrequencyMHz = centerFrequencyMHz;
     this.spanMHz = spanMHz;
@@ -122,7 +122,7 @@ public class SettingsRequest extends ADatagram {
    * @return a default SettingsRequest instance
    */
   public static SettingsRequest getInstance() {
-    return new SettingsRequest(1250, 1250, EReferenceLevel.MINUS_50, EResolutionBandwidth.ONE_MHZ);
+    return new SettingsRequest(1250, 1250, ReferenceLevel.MINUS_50, ResolutionBandwidth.ONE_MHZ);
   }
 
   //<editor-fold defaultstate="collapsed" desc="Getter and Setter">
@@ -150,19 +150,19 @@ public class SettingsRequest extends ADatagram {
     this.lnbPower = lnbPower;
   }
 
-  public EReferenceLevel getReferenceLevel() {
+  public ReferenceLevel getReferenceLevel() {
     return referenceLevel;
   }
 
-  public void setReferenceLevel(EReferenceLevel referenceLevel) {
+  public void setReferenceLevel(ReferenceLevel referenceLevel) {
     this.referenceLevel = referenceLevel;
   }
 
-  public EResolutionBandwidth getResolutionBandwidth() {
+  public ResolutionBandwidth getResolutionBandwidth() {
     return resolutionBandwidth;
   }
 
-  public void setResolutionBandwidth(EResolutionBandwidth resolutionBandwidth) {
+  public void setResolutionBandwidth(ResolutionBandwidth resolutionBandwidth) {
     this.resolutionBandwidth = resolutionBandwidth;
   }
 

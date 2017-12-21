@@ -26,7 +26,7 @@
 package com.avcomofva.sbs.datagram.read;
 
 import com.avcomfova.sbs.datagram.ADatagram;
-import com.avcomofva.sbs.enumerated.EDatagramType;
+import com.avcomofva.sbs.enumerated.DatagramType;
 import java.util.Arrays;
 import javax.usb3.utility.ByteUtility;
 
@@ -51,7 +51,7 @@ public final class ErrorResponse extends ADatagram {
    *                             error
    */
   public ErrorResponse(byte[] bytes) throws Exception {
-    super(EDatagramType.ERROR_RESPONSE);
+    super(DatagramType.ERROR_RESPONSE);
     this.valid = true;
     this.elapsedTimeMillis = 1;
     this.transactionId = System.currentTimeMillis();

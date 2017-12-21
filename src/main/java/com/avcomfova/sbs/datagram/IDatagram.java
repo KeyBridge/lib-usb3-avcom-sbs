@@ -25,7 +25,7 @@
  */
 package com.avcomfova.sbs.datagram;
 
-import com.avcomofva.sbs.enumerated.EDatagramType;
+import com.avcomofva.sbs.enumerated.DatagramType;
 
 /**
  * Interface describing the variables and methods that a Datagram instance must
@@ -133,7 +133,7 @@ public interface IDatagram {
    *
    * @return the datagram type identifier
    */
-  public EDatagramType getType();
+  public DatagramType getType();
 
   /**
    * Get the transaction identifier. This is used by a device controller to

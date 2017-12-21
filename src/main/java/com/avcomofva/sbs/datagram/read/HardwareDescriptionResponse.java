@@ -52,7 +52,7 @@ public final class HardwareDescriptionResponse extends ADatagram {
   /**
    * The Datagram type.
    */
-  private static final EDatagramType TYPE = EDatagramType.HARDWARE_DESCRIPTION_RESPONSE;
+  private static final DatagramType TYPE = DatagramType.HARDWARE_DESCRIPTION_RESPONSE;
   /**
    * The HW description packet length. (Table 7.)
    * <p>
@@ -63,7 +63,7 @@ public final class HardwareDescriptionResponse extends ADatagram {
   /**
    * The Avcom product ID. Byte #4.
    */
-  private EProductID productId;
+  private ProductID productId;
   /**
    * The device major firmware version. Byte #5.
    */
@@ -87,16 +87,16 @@ public final class HardwareDescriptionResponse extends ADatagram {
   /**
    * The current device reference level (dB). Byte #16.
    */
-  private EReferenceLevel currentReferenceLevel;
+  private ReferenceLevel currentReferenceLevel;
   /**
    * The current device resolution bandwidth (MHz). Byte #17.
    */
-  private EResolutionBandwidth currentRBW;
+  private ResolutionBandwidth currentRBW;
   /**
    * The maximum available resolution bandwidth at the currently configured span
    * (MHz). Byte #18.
    */
-  private EResolutionBandwidth availableRBW;
+  private ResolutionBandwidth availableRBW;
   /**
    * The current RF input (1 through 6) that the device is listening on. Byte
    * #19.
@@ -145,7 +145,7 @@ public final class HardwareDescriptionResponse extends ADatagram {
   /**
    * The PCB revision. Byte #45.
    */
-  private EPCBRevision pcbRevision;
+  private PCBRevision pcbRevision;
   /**
    * The calibration date. This is assembled from the day (Byte #46), month
    * (Byte #47) and year (Byte #48-49) values..
@@ -246,7 +246,7 @@ public final class HardwareDescriptionResponse extends ADatagram {
    * @throws java.lang.Exception if the byte array fails to parse
    */
   public HardwareDescriptionResponse(byte[] bytes) throws Exception {
-    super(EDatagramType.HARDWARE_DESCRIPTION_RESPONSE);
+    super(DatagramType.HARDWARE_DESCRIPTION_RESPONSE);
     this.parse(bytes);
   }
 
@@ -255,7 +255,7 @@ public final class HardwareDescriptionResponse extends ADatagram {
     return availableComPorts;
   }
 
-  public EResolutionBandwidth getAvailableRBW() {
+  public ResolutionBandwidth getAvailableRBW() {
     return availableRBW;
   }
 
@@ -299,7 +299,7 @@ public final class HardwareDescriptionResponse extends ADatagram {
     return currentLNBPowerSetting;
   }
 
-  public EResolutionBandwidth getCurrentRBW() {
+  public ResolutionBandwidth getCurrentRBW() {
     return currentRBW;
   }
 
@@ -307,7 +307,7 @@ public final class HardwareDescriptionResponse extends ADatagram {
     return currentRFInput;
   }
 
-  public EReferenceLevel getCurrentReferenceLevel() {
+  public ReferenceLevel getCurrentReferenceLevel() {
     return currentReferenceLevel;
   }
 
@@ -391,6 +391,7 @@ public final class HardwareDescriptionResponse extends ADatagram {
    *
    * @param elapsedTime the elapsed time of a given read operation.
    */
+  @Override
   public void setElapsedTime(long elapsedTime) {
     elapsedTimeMax = elapsedTimeMax > elapsedTime ? elapsedTimeMax : elapsedTime;
     elapsedTimeMin = elapsedTimeMin < elapsedTime ? elapsedTimeMin : elapsedTime;
@@ -417,11 +418,11 @@ public final class HardwareDescriptionResponse extends ADatagram {
     return LNBVoltage;
   }
 
-  public EPCBRevision getPcbRevision() {
+  public PCBRevision getPcbRevision() {
     return pcbRevision;
   }
 
-  public EProductID getProductId() {
+  public ProductID getProductId() {
     return productId;
   }
 
@@ -524,7 +525,7 @@ public final class HardwareDescriptionResponse extends ADatagram {
     /**
      * The Avcom product ID.
      */
-    this.productId = EProductID.fromByteCode(bytes[4]);
+    this.productId = ProductID.fromByteCode(bytes[4]);
     /**
      * The major firmware number.
      */
@@ -546,9 +547,9 @@ public final class HardwareDescriptionResponse extends ADatagram {
      * The current span. Divide by 10,000 to convert to Mhz.
      */
     this.currentSpan = ByteUtility.intFrom4Bytes(bytes, 12) / 10000;
-    this.currentReferenceLevel = EReferenceLevel.fromByteCode(bytes[16]);
-    this.currentRBW = EResolutionBandwidth.fromByteCode(bytes[17]);
-    this.availableRBW = EResolutionBandwidth.fromByteCode(bytes[18]);
+    this.currentReferenceLevel = ReferenceLevel.fromByteCode(bytes[16]);
+    this.currentRBW = ResolutionBandwidth.fromByteCode(bytes[17]);
+    this.availableRBW = ResolutionBandwidth.fromByteCode(bytes[18]);
     this.currentRFInput = bytes[19] - 9;
     this.availableRFInputs = bytes[20] - 9;
     this.currentSplitterGainCal = bytes[21];
@@ -567,7 +568,7 @@ public final class HardwareDescriptionResponse extends ADatagram {
      */
     this.serialNumber = new String(Arrays.copyOfRange(bytes, 29, 45));
 //    String serialNumTemp = "";    for (i = 0; i < 16; i++) {      serialNumTemp += (char) bytes[29 + i];    }    this.serialNumber = serialNumTemp;
-    this.pcbRevision = EPCBRevision.fromByteCode(bytes[45]);
+    this.pcbRevision = PCBRevision.fromByteCode(bytes[45]);
     /**
      * Mitch: Calibration Day and Month are up-shifted by 10 in the hardware.
      * Calendar months begin at zero so subtract one.
@@ -649,42 +650,42 @@ public final class HardwareDescriptionResponse extends ADatagram {
     // return ByteUtility.toString(datagramData, true);
     if (valid) {
       return "Hardware Description Datagram Contents"
-             + "\n index   name             value"
-             + "\n -----------------------------------------------"
-             + "\n this.datagramType             " + type
-             + "\n this.isValid                  " + valid
-             + "\n this.data length              " + (data != null ? data.length : "null")
-             + "\n 4 productId                   " + productId
-             + "\n 5 firmwareVersionMajor        " + firmwareVersionMajor
-             + "\n 6 firmwareVersionMinor        " + firmwareVersionMinor
-             + "\n 7 streamMode                  " + streamMode
-             + "\n 8-11 currentCenterFrequency   " + currentCenterFrequency
-             + "\n 12-15 currentSpan             " + currentSpan
-             + "\n 16 currentReferenceLevel      " + currentReferenceLevel
-             + "\n 17 currentRBW                 " + currentRBW
-             + "\n 18 availableRBW               " + availableRBW
-             + "\n 19 currentRFInput             " + currentRFInput
-             + "\n 20 availableRFInputs          " + availableRFInputs
-             + "\n 21 currentSplitterGainCal     " + currentSplitterGainCal
-             + "\n 22 hasSplitter                " + splitter
-             + "\n 23 currentComPort           0x" + Integer.toHexString(currentComPort)
-             + "\n 24 availableComPorts        0x" + Integer.toHexString(availableComPorts)
-             + "\n 25-26 currentInternalExtFrq:0x" + ByteUtility.toString(currentInternalExtFreq)
-             + "\n 27-28 currentInternalExt    0x" + ByteUtility.toString(currentInternalExt)
-             + "\n 29-44 serialNumber            " + serialNumber
-             + "\n 45 pcbRevision                " + pcbRevision
-             + "\n 46 calibration Date           " + new SimpleDateFormat("dd/MM/yyyy").format(calibrationDate)
-             + "\n 50 boardTemperatureC          " + boardTemperature
-             + "\n 51 boardTemperatureMinC       " + boardTemperatureMin
-             + "\n 52 boardTemperatureMaxC       " + boardTemperatureMax
-             + "\n 53 Reserved"
-             + "\n 54 hasLNBPower                " + lnbPower
-             + "\n 55 currentLNBPowerSetting     " + currentLNBPowerSetting
-             + "\n 56 isFirstRun                 " + isFirstRun
-             + "\n 57 isLocked                   " + isLocked
-             + "\n 58 projectID                0x" + Integer.toHexString(projectID) + " = " + projectID
-             //        + "\n    calibration date           " + calibrationMonth + "/" + calibrationDay + "/" + calibrationYear
-             + "";
+        + "\n index   name             value"
+        + "\n -----------------------------------------------"
+        + "\n this.datagramType             " + type
+        + "\n this.isValid                  " + valid
+        + "\n this.data length              " + (data != null ? data.length : "null")
+        + "\n 4 productId                   " + productId
+        + "\n 5 firmwareVersionMajor        " + firmwareVersionMajor
+        + "\n 6 firmwareVersionMinor        " + firmwareVersionMinor
+        + "\n 7 streamMode                  " + streamMode
+        + "\n 8-11 currentCenterFrequency   " + currentCenterFrequency
+        + "\n 12-15 currentSpan             " + currentSpan
+        + "\n 16 currentReferenceLevel      " + currentReferenceLevel
+        + "\n 17 currentRBW                 " + currentRBW
+        + "\n 18 availableRBW               " + availableRBW
+        + "\n 19 currentRFInput             " + currentRFInput
+        + "\n 20 availableRFInputs          " + availableRFInputs
+        + "\n 21 currentSplitterGainCal     " + currentSplitterGainCal
+        + "\n 22 hasSplitter                " + splitter
+        + "\n 23 currentComPort           0x" + Integer.toHexString(currentComPort)
+        + "\n 24 availableComPorts        0x" + Integer.toHexString(availableComPorts)
+        + "\n 25-26 currentInternalExtFrq:0x" + ByteUtility.toString(currentInternalExtFreq)
+        + "\n 27-28 currentInternalExt    0x" + ByteUtility.toString(currentInternalExt)
+        + "\n 29-44 serialNumber            " + serialNumber
+        + "\n 45 pcbRevision                " + pcbRevision
+        + "\n 46 calibration Date           " + new SimpleDateFormat("dd/MM/yyyy").format(calibrationDate)
+        + "\n 50 boardTemperatureC          " + boardTemperature
+        + "\n 51 boardTemperatureMinC       " + boardTemperatureMin
+        + "\n 52 boardTemperatureMaxC       " + boardTemperatureMax
+        + "\n 53 Reserved"
+        + "\n 54 hasLNBPower                " + lnbPower
+        + "\n 55 currentLNBPowerSetting     " + currentLNBPowerSetting
+        + "\n 56 isFirstRun                 " + isFirstRun
+        + "\n 57 isLocked                   " + isLocked
+        + "\n 58 projectID                0x" + Integer.toHexString(projectID) + " = " + projectID
+        //        + "\n    calibration date           " + calibrationMonth + "/" + calibrationDay + "/" + calibrationYear
+        + "";
     } else {
       return "Hardware Description datagram not initialized.";
     }
@@ -699,11 +700,11 @@ public final class HardwareDescriptionResponse extends ADatagram {
   public String toString() {
     if (valid) {
       return "HDR Product [" + productId
-             + "] SN [" + serialNumber
-             + "] FIRMWARE [" + firmwareVersionMajor + "." + firmwareVersionMinor
-             + "] REV [" + pcbRevision
-             + "] CALIBRATED [" + new SimpleDateFormat("dd/MM/yyyy").format(calibrationDate)
-             + "]";
+        + "] SN [" + serialNumber
+        + "] FIRMWARE [" + firmwareVersionMajor + "." + firmwareVersionMinor
+        + "] REV [" + pcbRevision
+        + "] CALIBRATED [" + new SimpleDateFormat("dd/MM/yyyy").format(calibrationDate)
+        + "]";
     } else {
       return "Hardware Description datagram not initialized.";
     }
@@ -711,9 +712,9 @@ public final class HardwareDescriptionResponse extends ADatagram {
 
   public String toStringSettings() {
     return "HDR CF [" + currentCenterFrequency
-           + "] Span [" + currentSpan
-           + "] RL [" + currentReferenceLevel
-           + "] RBW [" + currentRBW
-           + "]";
+      + "] Span [" + currentSpan
+      + "] RL [" + currentReferenceLevel
+      + "] RBW [" + currentRBW
+      + "]";
   }
 }

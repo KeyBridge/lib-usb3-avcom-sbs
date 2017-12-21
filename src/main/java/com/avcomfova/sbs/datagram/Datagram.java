@@ -28,7 +28,7 @@ package com.avcomfova.sbs.datagram;
 import com.avcomofva.sbs.datagram.read.ErrorResponse;
 import com.avcomofva.sbs.datagram.read.HardwareDescriptionResponse;
 import com.avcomofva.sbs.datagram.read.Waveform8BitResponse;
-import com.avcomofva.sbs.enumerated.EDatagramType;
+import com.avcomofva.sbs.enumerated.DatagramType;
 
 /**
  * A helper utility class to quickly identify and parse Avcom datagram bytes
@@ -59,7 +59,7 @@ public class Datagram {
     /**
      * The datagram type is always at byte address 3.
      */
-    EDatagramType datagramType = EDatagramType.fromByteCode(data[3]);
+    DatagramType datagramType = DatagramType.fromByteCode(data[3]);
     /**
      * No op for request types.
      */

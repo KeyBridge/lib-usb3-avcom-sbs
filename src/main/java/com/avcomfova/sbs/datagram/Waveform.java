@@ -27,10 +27,10 @@ package com.avcomfova.sbs.datagram;
 
 import com.avcomofva.sbs.datagram.read.Waveform8BitResponse;
 import com.avcomofva.sbs.datagram.write.SettingsRequest;
-import com.avcomofva.sbs.enumerated.EDatagramType;
-import com.avcomofva.sbs.enumerated.EProductID;
-import com.avcomofva.sbs.enumerated.EReferenceLevel;
-import com.avcomofva.sbs.enumerated.EResolutionBandwidth;
+import com.avcomofva.sbs.enumerated.DatagramType;
+import com.avcomofva.sbs.enumerated.ProductID;
+import com.avcomofva.sbs.enumerated.ReferenceLevel;
+import com.avcomofva.sbs.enumerated.ResolutionBandwidth;
 import java.util.Map;
 import java.util.TreeMap;
 
@@ -50,7 +50,7 @@ public class Waveform extends ADatagram {
   /**
    * The Avcom product ID that produced this data.
    */
-  private EProductID productId;
+  private ProductID productId;
   /**
    * The sweep center frequency MHz.
    */
@@ -62,18 +62,18 @@ public class Waveform extends ADatagram {
   /**
    * The sweep reference level (dBm)
    */
-  private EReferenceLevel referenceLevel;
+  private ReferenceLevel referenceLevel;
   /**
    * The sweep resolution bandwidth (enumerated) (MHz)
    */
-  private EResolutionBandwidth resolutionBandwidth;
+  private ResolutionBandwidth resolutionBandwidth;
   /**
    * A map of center frequency (MHz) vs. power level (dBm).
    */
   private final Map<Double, Double> traceData;
 
   public Waveform() {
-    super(EDatagramType.WAVEFORM);
+    super(DatagramType.WAVEFORM);
     this.traceData = new TreeMap<>();
   }
 
@@ -103,15 +103,15 @@ public class Waveform extends ADatagram {
     return centerFrequency;
   }
 
-  public EProductID getProductId() {
+  public ProductID getProductId() {
     return productId;
   }
 
-  public EReferenceLevel getReferenceLevel() {
+  public ReferenceLevel getReferenceLevel() {
     return referenceLevel;
   }
 
-  public EResolutionBandwidth getResolutionBandwidth() {
+  public ResolutionBandwidth getResolutionBandwidth() {
     return resolutionBandwidth;
   }
 

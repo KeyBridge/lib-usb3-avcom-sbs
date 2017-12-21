@@ -34,14 +34,13 @@ import com.avcomofva.sbs.datagram.read.Waveform8BitResponse;
 import com.avcomofva.sbs.datagram.write.HardwareDescriptionRequest;
 import com.avcomofva.sbs.datagram.write.SettingsRequest;
 import com.avcomofva.sbs.datagram.write.Waveform8BitRequest;
-import com.avcomofva.sbs.enumerated.EDatagramType;
+import com.avcomofva.sbs.enumerated.DatagramType;
 import com.avcomofva.utility.StopWatch;
 import com.ftdichip.usb.FTDI;
-import static com.ftdichip.usb.FTDIUtility.DEFAULT_BAUD_RATE;
-import com.ftdichip.usb.enumerated.EFlowControl;
-import com.ftdichip.usb.enumerated.ELineDatabits;
-import com.ftdichip.usb.enumerated.ELineParity;
-import com.ftdichip.usb.enumerated.ELineStopbits;
+import com.ftdichip.usb.enumerated.FlowControl;
+import com.ftdichip.usb.enumerated.LineDatabit;
+import com.ftdichip.usb.enumerated.LineParity;
+import com.ftdichip.usb.enumerated.LineStopbit;
 import java.net.InetAddress;
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -53,6 +52,8 @@ import java.util.logging.Level;
 import java.util.logging.Logger;
 import javax.usb3.exception.UsbException;
 import javax.usb3.utility.ByteUtility;
+
+import static com.ftdichip.usb.FTDIUtility.DEFAULT_BAUD_RATE;
 
 /**
  * Sensor implementation supporting the Avcom SBS single-board-sensor platform.
@@ -245,12 +246,12 @@ public class AvcomSBS implements Runnable {
          * Add each new SettingsRequest to the queue, sorted by centerFrequency.
          */
         if (sr.getStartFrequencyMHz() > hardwareDescription.getProductId().getMinFrequency()
-            && sr.getStopFrequencyMHz() < hardwareDescription.getProductId().getMaxFrequency()) {
+          && sr.getStopFrequencyMHz() < hardwareDescription.getProductId().getMaxFrequency()) {
           synchronized (SETTINGS_REQUEST_QUEUE) {
             SETTINGS_REQUEST_QUEUE.put(cfiMHz, sr);
           }
         } else if (sr.getStartFrequencyMHz() < hardwareDescription.getProductId().getMinFrequency()
-                   && sr.getStopFrequencyMHz() > hardwareDescription.getProductId().getMinFrequency()) {
+          && sr.getStopFrequencyMHz() > hardwareDescription.getProductId().getMinFrequency()) {
           /**
            * The settings request is low. Shift the frequencies to the right
            * (higher).
@@ -264,7 +265,7 @@ public class AvcomSBS implements Runnable {
             SETTINGS_REQUEST_QUEUE.put(newcf, sr);
           }
         } else if (sr.getStartFrequencyMHz() < hardwareDescription.getProductId().getMaxFrequency()
-                   && sr.getStopFrequencyMHz() > hardwareDescription.getProductId().getMaxFrequency()) {
+          && sr.getStopFrequencyMHz() > hardwareDescription.getProductId().getMaxFrequency()) {
           /**
            * The settings request is hight. Shift the frequencies to the left
            * (lower).
@@ -349,7 +350,7 @@ public class AvcomSBS implements Runnable {
     /**
      * Configure the FTDI serial port to Avcom specifications.
      */
-    ftdi.configureSerialPort(DEFAULT_BAUD_RATE, ELineDatabits.BITS_8, ELineStopbits.STOP_BIT_1, ELineParity.NONE, EFlowControl.DISABLE_FLOW_CTRL);
+    ftdi.configureSerialPort(DEFAULT_BAUD_RATE, LineDatabit.BITS_8, LineStopbit.STOP_BIT_1, LineParity.NONE, FlowControl.DISABLE_FLOW_CTRL);
     /**
      * Get a HardwareDescriptionResponse from the device. Try a few times to
      * allow for the device to boot up and also to accommodate some sloppiness
@@ -490,7 +491,7 @@ public class AvcomSBS implements Runnable {
        * length indicator. Add the USB header and it is located at the sixth USB
        * packet byte (index = 5).
        */
-      if (usbFrame[0] == IDatagram.STX && EDatagramType.fromByteCode(usbFrame[3]) != null) {
+      if (usbFrame[0] == IDatagram.STX && DatagramType.fromByteCode(usbFrame[3]) != null) {
         /**
          * Initialize the Avcom datagram byte buffer to the length indicated in
          * the datagram packet header (Avcom datagram byte index 1 and 2). The

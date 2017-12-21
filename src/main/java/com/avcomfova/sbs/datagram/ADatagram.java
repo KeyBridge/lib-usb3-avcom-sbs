@@ -25,7 +25,7 @@
  */
 package com.avcomfova.sbs.datagram;
 
-import com.avcomofva.sbs.enumerated.EDatagramType;
+import com.avcomofva.sbs.enumerated.DatagramType;
 import com.avcomofva.utility.SerialNumber;
 
 /**
@@ -39,7 +39,7 @@ public abstract class ADatagram implements IDatagram {
   /**
    * The datagram type.
    */
-  protected final EDatagramType type;
+  protected final DatagramType type;
   /**
    * The datagram contents. E.g. trace data read by the device (dB)
    */
@@ -65,7 +65,7 @@ public abstract class ADatagram implements IDatagram {
    *
    * @param datagramType the datagram type
    */
-  public ADatagram(EDatagramType datagramType) {
+  public ADatagram(DatagramType datagramType) {
     this.type = datagramType;
     this.transactionId = SerialNumber.get();
   }
@@ -87,7 +87,7 @@ public abstract class ADatagram implements IDatagram {
    * @return the datagram type identifier
    */
   @Override
-  public EDatagramType getType() {
+  public DatagramType getType() {
     return type;
   }
 

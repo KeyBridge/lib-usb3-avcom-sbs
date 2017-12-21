@@ -26,7 +26,7 @@
 package com.avcomofva.sbs;
 
 import com.avcomofva.sbs.datagram.read.HardwareDescriptionResponse;
-import com.avcomofva.sbs.enumerated.EDatagramType;
+import com.avcomofva.sbs.enumerated.DatagramType;
 import javax.usb3.utility.ByteUtility;
 import org.junit.Test;
 
@@ -44,7 +44,7 @@ public class TestBytes {
 
     byte seven = (byte) 0x07;
 
-    EDatagramType dg = EDatagramType.fromByteCode(seven);
+    DatagramType dg = DatagramType.fromByteCode(seven);
     System.out.println(dg);
 
     byte[] hw = {

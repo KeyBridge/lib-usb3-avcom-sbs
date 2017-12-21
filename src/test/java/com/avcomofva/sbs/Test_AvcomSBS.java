@@ -29,8 +29,8 @@ import com.avcomfova.sbs.AvcomSBS;
 import com.avcomfova.sbs.IDatagramListener;
 import com.avcomfova.sbs.datagram.IDatagram;
 import com.avcomofva.sbs.datagram.write.SettingsRequest;
-import com.avcomofva.sbs.enumerated.EReferenceLevel;
-import com.avcomofva.sbs.enumerated.EResolutionBandwidth;
+import com.avcomofva.sbs.enumerated.ReferenceLevel;
+import com.avcomofva.sbs.enumerated.ResolutionBandwidth;
 import com.ftdichip.usb.FTDI;
 import com.ftdichip.usb.FTDIUtility;
 import java.util.ArrayList;
@@ -73,13 +73,13 @@ public class Test_AvcomSBS implements IDatagramListener {
 
     AvcomSBS avcom = new AvcomSBS(ftdi);
     avcom.addListener(test);
-    avcom.setSettings(new SettingsRequest(1250, 2500, EReferenceLevel.MINUS_10, EResolutionBandwidth.ONE_MHZ));
+    avcom.setSettings(new SettingsRequest(1250, 2500, ReferenceLevel.MINUS_10, ResolutionBandwidth.ONE_MHZ));
 
     System.out.println("\nStarting Avcom SBS with full span sweep.");
     avcom.start();
     Thread.sleep(15000);
     System.out.println("\nChanging Avcom SBS with narrow span sweep.");
-    avcom.setSettings(new SettingsRequest(500, 300, EReferenceLevel.MINUS_50, EResolutionBandwidth.ONE_MHZ));
+    avcom.setSettings(new SettingsRequest(500, 300, ReferenceLevel.MINUS_50, ResolutionBandwidth.ONE_MHZ));
     Thread.sleep(3000);
     System.out.println("\nStopping Avcom SBS");
     avcom.stop();

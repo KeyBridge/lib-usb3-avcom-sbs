@@ -28,21 +28,21 @@ package com.avcomofva.sbs;
 import com.avcomofva.sbs.datagram.write.HardwareDescriptionRequest;
 import com.ftdichip.usb.FTDI;
 import com.ftdichip.usb.FTDIUtility;
-import com.ftdichip.usb.enumerated.EFlowControl;
-import com.ftdichip.usb.enumerated.ELineDatabits;
-import com.ftdichip.usb.enumerated.ELineParity;
-import com.ftdichip.usb.enumerated.ELineStopbits;
+import com.ftdichip.usb.enumerated.FlowControl;
+import com.ftdichip.usb.enumerated.LineDatabit;
+import com.ftdichip.usb.enumerated.LineParity;
+import com.ftdichip.usb.enumerated.LineStopbit;
 import java.util.ArrayList;
 import java.util.List;
 import javax.usb3.IUsbDevice;
 import javax.usb3.IUsbHub;
 import javax.usb3.IUsbServices;
 import javax.usb3.UsbHostManager;
-import static javax.usb3.enumerated.EEndpointDirection.HOST_TO_DEVICE;
 import javax.usb3.exception.UsbException;
 import javax.usb3.request.BMRequestType;
 import javax.usb3.utility.ByteUtility;
-import org.junit.Test;
+
+import static javax.usb3.enumerated.EEndpointDirection.HOST_TO_DEVICE;
 
 /**
  *
@@ -53,7 +53,7 @@ public class Test_FTDI {
   private static final short vendorId = 0x0403;
   private static final short productId = 0x6001;
 
-  @Test
+//  @Test
   public void test() throws Exception {
     Test_FTDI test = new Test_FTDI();
     IUsbDevice usbDevice = test.findAvcomIUsbDevice();
@@ -69,10 +69,10 @@ public class Test_FTDI {
 //    FTDI ftdi = new FTDI();
     FTDIUtility.setBaudRate(usbDevice, 115200);
     FTDIUtility.setLineProperty(usbDevice,
-                                ELineDatabits.BITS_8,
-                                ELineStopbits.STOP_BIT_1,
-                                ELineParity.NONE);
-    FTDIUtility.setFlowControl(usbDevice, EFlowControl.DISABLE_FLOW_CTRL);
+                                LineDatabit.BITS_8,
+                                LineStopbit.STOP_BIT_1,
+                                LineParity.NONE);
+    FTDIUtility.setFlowControl(usbDevice, FlowControl.DISABLE_FLOW_CTRL);
     FTDIUtility.setDTRRTS(usbDevice, false, true);
 
     FTDI ftdi = new FTDI(usbDevice);
@@ -126,7 +126,7 @@ public class Test_FTDI {
      * types match exactly what is in the USB specification.
      */
     if (vendorId == iUsbDevice.getUsbDeviceDescriptor().idVendor()
-        && productId == iUsbDevice.getUsbDeviceDescriptor().idProduct()) {
+      && productId == iUsbDevice.getUsbDeviceDescriptor().idProduct()) {
       iUsbDeviceList.add(iUsbDevice);
     }
     /*
