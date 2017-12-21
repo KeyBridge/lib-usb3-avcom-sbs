@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2014, Jesse Caulfield
+ * Copyright (c) 2017, Key Bridge
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -81,7 +81,7 @@ public class AvcomSBS implements Runnable {
   /**
    * A static logger.
    */
-  private static final Logger logger = Logger.getLogger(AvcomSBS.class.getName());
+  private static final Logger LOGGER = Logger.getLogger(AvcomSBS.class.getName());
 
   /**
    * The USB Device to which this AvcomSBS device is attached. This is the FTDI
@@ -161,7 +161,7 @@ public class AvcomSBS implements Runnable {
    *                      use
    */
   public AvcomSBS(final FTDI ftdi) throws UsbException, Exception {
-    logger.log(Level.INFO, "Opening AvcomSBS on USB {0}", ftdi);
+    LOGGER.log(Level.INFO, "Opening AvcomSBS on USB {0}", ftdi);
     /**
      * Set the USB Device.
      */
@@ -221,7 +221,7 @@ public class AvcomSBS implements Runnable {
      * </pre>
      */
     if (settingsRequest.getSpanMHz() > Waveform8BitResponse.DATAGRAM_PAYLOAD_LENGTH * settingsRequest.getResolutionBandwidth().getMHz()) {
-      logger.log(Level.FINE, "Avcom settings must be split into multiples {0}", settingsRequest);
+      LOGGER.log(Level.FINE, "Avcom settings must be split into multiples {0}", settingsRequest);
       /**
        * The request requires more data points than a single Trace can carry.
        */
@@ -229,7 +229,7 @@ public class AvcomSBS implements Runnable {
       double stopMHz = settingsRequest.getCenterFrequencyMHz() + settingsRequest.getSpanMHz() / 2;
       double sampleSpanMHz = Waveform8BitResponse.DATAGRAM_PAYLOAD_LENGTH * settingsRequest.getResolutionBandwidth().getMHz();
       int numSettings = (int) (settingsRequest.getSpanMHz() / sampleSpanMHz) + 1;
-      logger.log(Level.FINE, "Avcom set {0} to {1} MHz, span {2}, {3} passes", new Object[]{startMHz, stopMHz, sampleSpanMHz, numSettings});
+      LOGGER.log(Level.FINE, "Avcom set {0} to {1} MHz, span {2}, {3} passes", new Object[]{startMHz, stopMHz, sampleSpanMHz, numSettings});
       for (int iterator = 0; iterator < numSettings; iterator++) {
         /**
          * The iterator center frequency cf_i in MHz.
@@ -260,7 +260,7 @@ public class AvcomSBS implements Runnable {
           double newcf = span / 2d + hardwareDescription.getProductId().getMinFrequency();
           sr.setCenterFrequencyMHz(newcf);
           sr.setSpanMHz(span);
-          logger.log(Level.FINER, "Avcom adjusted lower value to {0} MHz", sr);
+          LOGGER.log(Level.FINER, "Avcom adjusted lower value to {0} MHz", sr);
           synchronized (SETTINGS_REQUEST_QUEUE) {
             SETTINGS_REQUEST_QUEUE.put(newcf, sr);
           }
@@ -274,12 +274,12 @@ public class AvcomSBS implements Runnable {
           double newcf = span / 2d + sr.getStartFrequencyMHz();
           sr.setCenterFrequencyMHz(newcf);
           sr.setSpanMHz(span);
-          logger.log(Level.FINER, "Avcom adjusted upper value to {0} MHz", sr);
+          LOGGER.log(Level.FINER, "Avcom adjusted upper value to {0} MHz", sr);
           synchronized (SETTINGS_REQUEST_QUEUE) {
             SETTINGS_REQUEST_QUEUE.put(newcf, sr);
           }
         } else {
-          logger.log(Level.WARNING, "Avcom settings out of bounds. Discard {0}", sr);
+          LOGGER.log(Level.WARNING, "Avcom settings out of bounds. Discard {0}", sr);
         }
       } // end for numsamples
     } else {
@@ -366,7 +366,7 @@ public class AvcomSBS implements Runnable {
       IDatagram datagram = read();
       if (datagram instanceof HardwareDescriptionResponse) {
         hardwareDescription = (HardwareDescriptionResponse) datagram;
-        logger.log(Level.FINE, "AvcomSBS initialized OK. {0}", hardwareDescription);
+        LOGGER.log(Level.FINE, "AvcomSBS initialized OK. {0}", hardwareDescription);
         break; // bread out of the FOR loop if hardware description received.
       }
       /**
@@ -374,10 +374,10 @@ public class AvcomSBS implements Runnable {
        * then wait one second a try again.
        */
       try {
-        logger.log(Level.WARNING, "AvcomSBS initialization Error. Try {0} of 5.", (i + 1));
+        LOGGER.log(Level.WARNING, "AvcomSBS initialization Error. Try {0} of 5.", (i + 1));
         Thread.sleep(1000);
       } catch (InterruptedException ex) {
-        logger.log(Level.SEVERE, null, ex);
+        LOGGER.log(Level.SEVERE, null, ex);
       }
     }
     /**
@@ -465,7 +465,7 @@ public class AvcomSBS implements Runnable {
      */
     byte[] usbFrame = ftdi.read();
     while (usbFrame.length > 0) {
-      logger.log(Level.FINEST, "Avcom READ [{0}] {1}", new Object[]{usbFrame.length, ByteUtility.toString(usbFrame)});
+      LOGGER.log(Level.FINEST, "Avcom READ [{0}] {1}", new Object[]{usbFrame.length, ByteUtility.toString(usbFrame)});
       /**
        * Developer note: There is a race condition with the FTDI chip where it
        * will produce infinite zeros if the settings are not configured properly
@@ -547,7 +547,7 @@ public class AvcomSBS implements Runnable {
         /**
          * DEBUG output. This dumps the bytes read to the console for analysis.
          */
-        logger.log(Level.FINEST,
+        LOGGER.log(Level.FINEST,
                    "Avcom USB PIPE READ {0} [{1}]  length [{2}] index [{3}] length [{4}]",
                    new Object[]{usbFrame.length, ByteUtility.toString(usbFrame), avcomDatagram.length, avcomDatagramIndex, copyLength});
         /**
@@ -600,7 +600,7 @@ public class AvcomSBS implements Runnable {
      * datagrams have a serialize method writing bytes is easier to code.
      */
     ftdi.write(datagram.serialize());
-    logger.log(Level.FINE,
+    LOGGER.log(Level.FINE,
                "Avcom WRITE [{0}] {1}",
                new Object[]{datagram.serialize().length, ByteUtility.toString(datagram.serialize())});
     /**
