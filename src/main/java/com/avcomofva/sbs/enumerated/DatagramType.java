@@ -38,16 +38,8 @@ package com.avcomofva.sbs.enumerated;
  *
  * @author Jesse Caulfield
  */
-public enum EDatagramType {
-  /**
-   * Change Control Settings Request Datagram for Avcom devices. (Table 12)
-   */
-  /**
-   * Change Control Settings Request Datagram for Avcom devices. (Table 12)
-   */
-  /**
-   * Change Control Settings Request Datagram for Avcom devices. (Table 12)
-   */
+public enum DatagramType {
+
   /**
    * Change Control Settings Request Datagram for Avcom devices. (Table 12)
    */
@@ -109,7 +101,7 @@ public enum EDatagramType {
    */
   private final byte byteCode;
 
-  private EDatagramType(byte byteCode) {
+  private DatagramType(byte byteCode) {
     this.byteCode = byteCode;
   }
 
@@ -126,10 +118,10 @@ public enum EDatagramType {
    * Get an Avcom datagram type by its corresponding byte code.
    *
    * @param byteCode the byte code
-   * @return the corresponding EDatagramType instance
+   * @return the corresponding DatagramType instance
    */
-  public static EDatagramType fromByteCode(byte byteCode) {
-    for (EDatagramType eAvcomDatagramType : EDatagramType.values()) {
+  public static DatagramType fromByteCode(byte byteCode) {
+    for (DatagramType eAvcomDatagramType : DatagramType.values()) {
       if (eAvcomDatagramType.getByteCode() == byteCode) {
         return eAvcomDatagramType;
       }

@@ -33,7 +33,7 @@ package com.avcomofva.sbs.enumerated;
  *
  * @author Jesse Caulfield
  */
-public enum EProductID {
+public enum ProductID {
 
   /**
    * Software Test Device.
@@ -73,7 +73,7 @@ public enum EProductID {
    */
   private final double minSensitivity;
 
-  private EProductID(byte code, String label, double maxFrequency, double minFrequency, double minSensivity) {
+  private ProductID(byte code, String label, double maxFrequency, double minFrequency, double minSensivity) {
     this.byteCode = code;
     this.model = label;
     this.maxFrequency = maxFrequency;
@@ -102,13 +102,13 @@ public enum EProductID {
   }
 
   /**
-   * Get a EProductID from the corresponding product ID byte value.
+   * Get a ProductID from the corresponding product ID byte value.
    *
    * @param byteCode the product ID byte value.
-   * @return the corresponding EProductID
+   * @return the corresponding ProductID
    */
-  public static EProductID fromByteCode(byte byteCode) {
-    for (EProductID eAvcomProductID : EProductID.values()) {
+  public static ProductID fromByteCode(byte byteCode) {
+    for (ProductID eAvcomProductID : ProductID.values()) {
       if (eAvcomProductID.getByteCode() == byteCode) {
         return eAvcomProductID;
       }

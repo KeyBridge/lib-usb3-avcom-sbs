@@ -32,7 +32,7 @@ package com.avcomofva.sbs.enumerated;
  *
  * @author Jesse Caulfield
  */
-public enum EPCBRevision {
+public enum PCBRevision {
 
   // PBC Revisions by Byte
   FAB08D02RevA1((byte) 0x41, "FAB-08D02 Revision A1"),
@@ -59,7 +59,7 @@ public enum EPCBRevision {
    */
   private final String label;
 
-  private EPCBRevision(byte code, String label) {
+  private PCBRevision(byte code, String label) {
     this.byteCode = code;
     this.label = label;
   }
@@ -88,8 +88,8 @@ public enum EPCBRevision {
    * @param byteCode the byte-code value
    * @return the Product PCB Revision
    */
-  public static EPCBRevision fromByteCode(byte byteCode) {
-    for (EPCBRevision eAvcomPCBRevision : EPCBRevision.values()) {
+  public static PCBRevision fromByteCode(byte byteCode) {
+    for (PCBRevision eAvcomPCBRevision : PCBRevision.values()) {
       if (eAvcomPCBRevision.getByteCode() == byteCode) {
         return eAvcomPCBRevision;
       }

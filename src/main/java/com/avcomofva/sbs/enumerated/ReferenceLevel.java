@@ -9,7 +9,7 @@ package com.avcomofva.sbs.enumerated;
  *
  * @author Key Bridge LLC
  */
-public enum EReferenceLevel {
+public enum ReferenceLevel {
 
   /**
    * -10 dBm.
@@ -51,7 +51,7 @@ public enum EReferenceLevel {
    */
   private final int waveformOffset;
 
-  private EReferenceLevel(int b, String label, int waveformOffset) {
+  private ReferenceLevel(int b, String label, int waveformOffset) {
     this.byteCode = b;
     this.label = label;
     this.waveformOffset = waveformOffset;
@@ -106,10 +106,10 @@ public enum EReferenceLevel {
    * @param d the input reference level, range between [-10, -50] (dBm)
    * @return the nearest possible allowed reference level
    */
-  public static EReferenceLevel findNearest(double d) {
-    EReferenceLevel rl = MINUS_10;
+  public static ReferenceLevel findNearest(double d) {
+    ReferenceLevel rl = MINUS_10;
     double distance = 0;
-    for (EReferenceLevel r : EReferenceLevel.values()) {
+    for (ReferenceLevel r : ReferenceLevel.values()) {
       double currentDistance = Math.abs(r.getWaveformOffset() + 40 - d);
       if (distance == 0) {
         distance = currentDistance;
@@ -122,8 +122,8 @@ public enum EReferenceLevel {
     return rl;
   }
 
-  public static EReferenceLevel fromByteCode(byte byteCode) {
-    for (EReferenceLevel r : EReferenceLevel.values()) {
+  public static ReferenceLevel fromByteCode(byte byteCode) {
+    for (ReferenceLevel r : ReferenceLevel.values()) {
       if (r.getByteCode() == byteCode) {
         return r;
       }

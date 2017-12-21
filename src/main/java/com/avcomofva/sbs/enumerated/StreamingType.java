@@ -21,7 +21,7 @@ package com.avcomofva.sbs.enumerated;
  *
  * @author Key Bridge LLC
  */
-public class EStreamingType {
+public class StreamingType {
 
   /**
    * 0x00. Stop streaming.
