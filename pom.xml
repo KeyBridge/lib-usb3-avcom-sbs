@@ -11,9 +11,6 @@
     javax.usb API to command and read data from an AVCOM device via a USB
     port.
 
-    Note that the dependency on 'usb2-ftdi' is _provided_ and must be directly
-    imported into the using application.
-
     v1.0.0 - initial release using Gnu RXTX
     v1.1.0 - add support for OSGI
     v1.2.0 - use maven build
@@ -42,7 +39,6 @@
       <groupId>${project.groupId}</groupId>
       <artifactId>usb3-ftdi</artifactId>
       <version>1.3.0</version>
-      <scope>provided</scope>
     </dependency>
     <dependency>
       <groupId>junit</groupId>
