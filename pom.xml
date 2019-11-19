@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
   <modelVersion>4.0.0</modelVersion>
-  <groupId>keybridge.lib</groupId>
+  <groupId>keybridge.usb</groupId>
   <artifactId>usb3-avcom-sbs</artifactId>
   <version>2.1.0</version>
   <packaging>jar</packaging>
@@ -10,6 +10,9 @@
   <description>Implementation of the Java Specification Request 80 (JSR80)
     javax.usb API to command and read data from an AVCOM device via a USB
     port.
+
+    Note that the dependency on 'usb2-ftdi' is _provided_ and must be directly
+    imported into the using application.
 
     v1.0.0 - initial release using Gnu RXTX
     v1.1.0 - add support for OSGI
@@ -39,6 +42,7 @@
       <groupId>${project.groupId}</groupId>
       <artifactId>usb3-ftdi</artifactId>
       <version>1.3.0</version>
+      <scope>provided</scope>
     </dependency>
     <dependency>
       <groupId>junit</groupId>
